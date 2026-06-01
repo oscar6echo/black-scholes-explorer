@@ -345,7 +345,7 @@ Applying the standard normal symmetry property $1 - \Phi(z) = \Phi(-z)$ yields t
 $$\boxed{\ \ \vphantom{\int} P(S_0, T) = K e^{-rT} \Phi(-d_2) - S_0 e^{-qT} \Phi(-d_1)\ \ }$$
 
 ::: tip Symbolic Verification
-You can formally verify that our Call and Put closed-form solutions satisfy Put-Call Parity and the BSM PDE symbolically using Python and SymPy. See [Annex B: Symbolic Verification via Python & SymPy](./annex-python.md), the [Pre-rendered SymPy Page](/notebooks/1-sympy-verification.html) online, or download the raw [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) notebook to run locally.
+You can formally verify that our Call and Put closed-form solutions satisfy Put-Call Parity and the BSM PDE symbolically using Python and SymPy. See [Annex B: Symbolic Verification via Python & SymPy](./annex-python.md), the <a href="/notebooks/1-sympy-verification.html" target="_blank" rel="noopener noreferrer">Pre-rendered SymPy Page</a> online, or download the raw [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) notebook to run locally.
 :::
 
 ## 8. Interpretations
