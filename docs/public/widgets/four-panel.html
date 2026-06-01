@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Black-Scholes Pricing Geometry (Four-Panel)</title>
+        <!-- Load Inter Font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+            rel="stylesheet"
+        >
+        <!-- Load Vue 3, D3, and Observable Plot from CDN -->
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"
+        ></script>
+        <style>
+            :root {
+                --bg-color: #0f172a;
+                --card-bg: #1e293b;
+                --border-color: #334155;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --primary: #38bdf8;
+                --primary-hover: #7dd3fc;
+                --panel-a: #60a5fa;
+                --panel-b: #fbbf24;
+                --panel-c: #f87171;
+                --panel-d: #34d399;
+            }
+
+            body {
+                margin: 0;
+                padding: 12px;
+                font-family: "Inter", sans-serif;
+                background-color: var(--bg-color);
+                color: var(--text-main);
+                overflow: hidden;
+            }
+
+            #app {
+                max-width: 1000px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .widget-container {
+                background-color: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 16px;
+                box-shadow:
+                    0 4px 6px -1px rgb(0 0 0 / 0.1),
+                    0 2px 4px -2px rgb(0 0 0 / 0.1);
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header {
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 8px;
+            }
+
+            .title {
+                font-size: 1.15rem;
+                font-weight: 600;
+                color: var(--text-main);
+                margin: 0;
+            }
+
+            .subtitle {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                margin: 2px 0 0 0;
+            }
+
+            .layout {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            @media (min-width: 868px) {
+                .layout {
+                    grid-template-columns: 240px 1fr;
+                }
+                .controls-panel {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 10px !important;
+                }
+            }
+
+            .controls-panel {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 8px;
+                background-color: rgba(15, 23, 42, 0.25);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 10px;
+            }
+
+            .control-group {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .control-label {
+                font-size: 0.75rem;
+                font-weight: 500;
+                color: var(--text-muted);
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .control-value {
+                font-family: "Fira Code", monospace;
+                color: var(--primary);
+                font-weight: 600;
+            }
+
+            input[type="range"] {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 100%;
+                height: 4px;
+                border-radius: 2px;
+                background: var(--border-color);
+                outline: none;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: var(--primary);
+                cursor: pointer;
+                transition: background 0.15s ease-in-out;
+            }
+
+            input[type="range"]::-webkit-slider-thumb:hover {
+                background: var(--primary-hover);
+            }
+
+            .chart-dashboard {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .dashboard-price {
+                background-color: rgba(52, 211, 153, 0.08);
+                border: 1px dashed rgba(52, 211, 153, 0.3);
+                border-radius: 8px;
+                padding: 8px 12px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .price-label {
+                font-size: 0.85rem;
+                font-weight: 500;
+                color: var(--text-main);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .price-indicator-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background-color: var(--panel-d);
+            }
+
+            .price-value {
+                font-family: "Fira Code", monospace;
+                font-size: 1.15rem;
+                font-weight: 700;
+                color: var(--panel-d);
+            }
+
+            .grid-4x4 {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            @media (min-width: 600px) {
+                .grid-4x4 {
+                    grid-template-columns: 1fr 1fr;
+                }
+            }
+
+            .panel-card {
+                background-color: rgba(15, 23, 42, 0.35);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 8px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .panel-header {
+                font-size: 0.72rem;
+                font-weight: 600;
+                color: var(--text-muted);
+                border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+                padding-bottom: 2px;
+                margin-bottom: 2px;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .panel-header-a {
+                color: var(--panel-a);
+            }
+            .panel-header-b {
+                color: var(--panel-b);
+            }
+            .panel-header-c {
+                color: var(--panel-c);
+            }
+            .panel-header-d {
+                color: var(--panel-d);
+            }
+
+            .plot-wrapper {
+                width: 100%;
+                height: 165px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <div class="widget-container">
+                <div class="header">
+                    <h3 class="title">
+                        Option Pricing Geometry (2×2 Visualizer)
+                    </h3>
+                    <p class="subtitle">
+                        Deconstruct Call Option pricing into a discounted
+                        expected value integral.
+                    </p>
+                </div>
+
+                <div class="layout">
+                    <!-- Controls Side -->
+                    <div class="controls-panel">
+                        <!-- Spot Price -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Spot Price (<i>S</i><sub>0</sub>)</span>
+                                <span class="control-value"
+                                >{{ s0.toFixed(1) }}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="150"
+                                step="1"
+                                v-model.number="s0"
+                            >
+                        </div>
+
+                        <!-- Strike -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Strike (<i>K</i>)</span>
+                                <span class="control-value"
+                                >{{ strike.toFixed(1) }}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="50"
+                                max="150"
+                                step="1"
+                                v-model.number="strike"
+                            >
+                        </div>
+
+                        <!-- Volatility -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Volatility (&sigma;)</span>
+                                <span class="control-value"
+                                >{{ (sigma * 100).toFixed(0) }}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.05"
+                                max="0.80"
+                                step="0.01"
+                                v-model.number="sigma"
+                            >
+                        </div>
+
+                        <!-- Maturity -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Maturity (<i>T</i>)</span>
+                                <span class="control-value"
+                                >{{ t.toFixed(2) }} yr</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.1"
+                                max="3.0"
+                                step="0.05"
+                                v-model.number="t"
+                            >
+                        </div>
+
+                        <!-- Interest Rate -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Interest Rate (<i>r</i>)</span>
+                                <span class="control-value"
+                                >{{ (r * 100).toFixed(0) }}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.00"
+                                max="0.15"
+                                step="0.01"
+                                v-model.number="r"
+                            >
+                        </div>
+
+                        <!-- Dividends -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Dividends (<i>q</i>)</span>
+                                <span class="control-value"
+                                >{{ (q * 100).toFixed(0) }}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.0"
+                                max="0.15"
+                                step="0.01"
+                                v-model.number="q"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- 2x2 Charts Dashboard -->
+                    <div class="chart-dashboard">
+                        <div class="dashboard-price">
+                            <div class="price-label">
+                                <span class="price-indicator-dot"></span>
+                                <span>Theoretical Call Price (BS Analytical &
+                                    Shaded Area)</span>
+                            </div>
+                            <div class="price-value">
+                                €{{ bsCallPrice.toFixed(4) }}
+                            </div>
+                        </div>
+
+                        <div class="grid-4x4">
+                            <!-- Panel A -->
+                            <div class="panel-card">
+                                <div class="panel-header panel-header-a">
+                                    <span>Panel A</span>
+                                    <span>Future Distribution f<sub
+                                        >Q</sub>(S<sub>T</sub>)</span>
+                                </div>
+                                <div
+                                    class="plot-wrapper"
+                                    id="panel-a-container"
+                                >
+                                </div>
+                            </div>
+
+                            <!-- Panel B -->
+                            <div class="panel-card">
+                                <div class="panel-header panel-header-b">
+                                    <span>Panel B</span>
+                                    <span>Discounted Density e<sup>-rT</sup>
+                                        f<sub>Q</sub>(S<sub>T</sub>)</span>
+                                </div>
+                                <div
+                                    class="plot-wrapper"
+                                    id="panel-b-container"
+                                >
+                                </div>
+                            </div>
+
+                            <!-- Panel C -->
+                            <div class="panel-card">
+                                <div class="panel-header panel-header-c">
+                                    <span>Panel C</span>
+                                    <span>Option Payoff max(S<sub>T</sub> - K,
+                                        0)</span>
+                                </div>
+                                <div
+                                    class="plot-wrapper"
+                                    id="panel-c-container"
+                                >
+                                </div>
+                            </div>
+
+                            <!-- Panel D -->
+                            <div class="panel-card">
+                                <div class="panel-header panel-header-d">
+                                    <span>Panel D</span>
+                                    <span>Contribution Curve (Present-Value
+                                        Weight)</span>
+                                </div>
+                                <div
+                                    class="plot-wrapper"
+                                    id="panel-d-container"
+                                >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /**
+             * ============================================================================
+             * Option Pricing Geometry Widget (Four-Panel Analysis)
+             * ============================================================================
+             *
+             * ARCHITECTURE OVERVIEW:
+             * This widget provides a multi-panel visual proof showing how option price
+             * is defined as the area under the "Contribution Curve" (the product of future
+             * option payoff, discounted factor, and risk-neutral probability density).
+             *
+             * CORE MODULES:
+             * 1. Vue 3 Reactive State Manager:
+             *    - `s0`, `strike`, `sigma`, `t`, `r`, `q`: Option parameters.
+             * 2. BSM Pricing Engine (`bsCallPrice`):
+             *    - Computes the exact theoretical call option price for baseline verification.
+             * 3. Curve Generator (`computeCurves`):
+             *    - Generates 200 grid points for four interrelated metrics:
+             *      - Panel A: Risk-Neutral Future Price Density fQ(S_T)
+             *      - Panel B: Discounted Density e^{-rT} * fQ(S_T)
+             *      - Panel C: Call Option Intrinsic Payoff max(S_T - K, 0)
+             *      - Panel D: Scenario Contribution to fair value (Payoff * Discounted Density)
+             * 4. Multi-Panel Observable Plot Renderer (`renderPlots`):
+             *    - Renders four vertically aligned subplots sharing the same X-axis (Spot Price S_T),
+             *      allowing visual correlation of scenarios.
+             * ============================================================================
+             */
+            const { createApp, ref, computed, watch, onMounted } = Vue;
+
+            // standard normal cumulative density function
+            function stdNormalCdf(x) {
+                const t = 1 / (1 + 0.2316419 * Math.abs(x));
+                const d = 0.3989422804;
+                const p = d * Math.exp(-0.5 * x * x) * t * (
+                    0.31938153 +
+                    t *
+                        (-0.356563782 +
+                            t *
+                                (1.781477937 +
+                                    t * (-1.821255978 + t * 1.330274429)))
+                );
+                return x >= 0 ? 1 - p : p;
+            }
+
+            createApp({
+                setup() {
+                    // Reactive Parameters
+                    const s0 = ref(100.0);
+                    const strike = ref(110.0);
+                    const sigma = ref(0.20);
+                    const t = ref(1.0);
+                    const r = ref(0.05);
+                    const q = ref(0.02);
+
+                    // Analytical Call Option Pricing
+                    const bsCallPrice = computed(() => {
+                        if (s0.value <= 0) return 0.0;
+                        const S = s0.value;
+                        const K = strike.value;
+                        const sig = sigma.value;
+                        const T = t.value;
+                        const rate = r.value;
+                        const div = q.value;
+
+                        if (T <= 0.001) return Math.max(S - K, 0);
+
+                        const d1 =
+                            (Math.log(S / K) +
+                                (rate - div + 0.5 * Math.pow(sig, 2)) * T) /
+                            (sig * Math.sqrt(T));
+                        const d2 = d1 - sig * Math.sqrt(T);
+
+                        const c = S * Math.exp(-div * T) * stdNormalCdf(d1) -
+                            K * Math.exp(-rate * T) * stdNormalCdf(d2);
+                        return Math.max(c, 0);
+                    });
+
+                    // Compute curves
+                    const computeCurves = () => {
+                        const S = Math.max(0.001, s0.value);
+                        const K = strike.value;
+                        const sig = sigma.value;
+                        const T = t.value;
+                        const rate = r.value;
+                        const div = q.value;
+
+                        const mu_l = Math.log(S) +
+                            (rate - div - 0.5 * Math.pow(sig, 2)) * T;
+                        const sigma_l = sig * Math.sqrt(T);
+
+                        const points = [];
+                        const minX = 30.0;
+                        const maxX = 230.0;
+                        const steps = 200;
+                        const dx = (maxX - minX) / steps;
+
+                        // If Spot is exactly 0, distribution is degenerate at 0.
+                        if (s0.value <= 0) {
+                            for (let i = 0; i <= steps; i++) {
+                                points.push({
+                                    x: minX + i * dx,
+                                    fQ: 0.0,
+                                    fQ_disc: 0.0,
+                                    payoff: 0.0,
+                                    contribution: 0.0,
+                                });
+                            }
+                            return points;
+                        }
+
+                        for (let i = 0; i <= steps; i++) {
+                            const x = minX + i * dx;
+
+                            // Lognormal PDF
+                            const exponent = -Math.pow(Math.log(x) - mu_l, 2) /
+                                (2 * Math.pow(sigma_l, 2));
+                            const fQ =
+                                (1.0 / (x * sigma_l * Math.sqrt(2 * Math.PI))) *
+                                Math.exp(exponent);
+
+                            // Discounted density
+                            const fQ_disc = Math.exp(-rate * T) * fQ;
+
+                            // Payoff
+                            const payoff = Math.max(x - K, 0.0);
+
+                            // Contribution
+                            const contribution = payoff * fQ_disc;
+
+                            points.push({
+                                x,
+                                fQ,
+                                fQ_disc,
+                                payoff,
+                                contribution,
+                            });
+                        }
+                        return points;
+                    };
+
+                    const renderPlots = () => {
+                        const data = computeCurves();
+                        const K = strike.value;
+
+                        // Panel containers
+                        const containerA = document.getElementById(
+                            "panel-a-container",
+                        );
+                        const containerB = document.getElementById(
+                            "panel-b-container",
+                        );
+                        const containerC = document.getElementById(
+                            "panel-c-container",
+                        );
+                        const containerD = document.getElementById(
+                            "panel-d-container",
+                        );
+
+                        if (
+                            !containerA || !containerB || !containerC ||
+                            !containerD
+                        ) return;
+
+                        containerA.innerHTML = "";
+                        containerB.innerHTML = "";
+                        containerC.innerHTML = "";
+                        containerD.innerHTML = "";
+
+                        const commonStyle = {
+                            color: "#94a3b8",
+                            fontFamily: "Inter, sans-serif",
+                        };
+
+                        // Panel A Plot
+                        const plotA = Plot.plot({
+                            width: containerA.clientWidth || 300,
+                            height: 150,
+                            background: "transparent",
+                            style: commonStyle,
+                            x: { grid: true, label: "S_T →", ticks: 5 },
+                            y: { grid: true, label: "" },
+                            marks: [
+                                Plot.areaY(data, {
+                                    x: "x",
+                                    y: "fQ",
+                                    fill: "#60a5fa",
+                                    fillOpacity: 0.15,
+                                }),
+                                Plot.line(data, {
+                                    x: "x",
+                                    y: "fQ",
+                                    stroke: "#60a5fa",
+                                    strokeWidth: 2,
+                                }),
+                            ],
+                        });
+                        containerA.appendChild(plotA);
+
+                        // Panel B Plot
+                        const plotB = Plot.plot({
+                            width: containerB.clientWidth || 300,
+                            height: 150,
+                            background: "transparent",
+                            style: commonStyle,
+                            x: { grid: true, label: "S_T →", ticks: 5 },
+                            y: { grid: true, label: "" },
+                            marks: [
+                                Plot.areaY(data, {
+                                    x: "x",
+                                    y: "fQ_disc",
+                                    fill: "#fbbf24",
+                                    fillOpacity: 0.15,
+                                }),
+                                Plot.line(data, {
+                                    x: "x",
+                                    y: "fQ_disc",
+                                    stroke: "#fbbf24",
+                                    strokeWidth: 2,
+                                }),
+                            ],
+                        });
+                        containerB.appendChild(plotB);
+
+                        // Panel C Plot
+                        const plotC = Plot.plot({
+                            width: containerC.clientWidth || 300,
+                            height: 150,
+                            background: "transparent",
+                            style: commonStyle,
+                            x: { grid: true, label: "S_T →", ticks: 5 },
+                            y: { grid: true, label: "" },
+                            marks: [
+                                Plot.line(data, {
+                                    x: "x",
+                                    y: "payoff",
+                                    stroke: "#f87171",
+                                    strokeWidth: 2.5,
+                                }),
+                                Plot.ruleX([K], {
+                                    stroke: "#f8fafc",
+                                    strokeWidth: 1.5,
+                                    strokeDasharray: "3,3",
+                                }),
+                            ],
+                        });
+                        containerC.appendChild(plotC);
+
+                        // Panel D Plot
+                        const plotD = Plot.plot({
+                            width: containerD.clientWidth || 300,
+                            height: 150,
+                            background: "transparent",
+                            style: commonStyle,
+                            x: { grid: true, label: "S_T →", ticks: 5 },
+                            y: { grid: true, label: "" },
+                            marks: [
+                                Plot.areaY(data, {
+                                    x: "x",
+                                    y: "contribution",
+                                    fill: "#34d399",
+                                    fillOpacity: 0.2,
+                                }),
+                                Plot.line(data, {
+                                    x: "x",
+                                    y: "contribution",
+                                    stroke: "#34d399",
+                                    strokeWidth: 2,
+                                }),
+                                Plot.ruleX([K], {
+                                    stroke: "#f8fafc",
+                                    strokeWidth: 1.5,
+                                    strokeDasharray: "3,3",
+                                }),
+                            ],
+                        });
+                        containerD.appendChild(plotD);
+                    };
+
+                    // Watchers
+                    watch([s0, strike, sigma, t, r, q], () => {
+                        renderPlots();
+                    });
+
+                    // Resize handler
+                    let resizeTimeout;
+                    const handleResize = () => {
+                        clearTimeout(resizeTimeout);
+                        resizeTimeout = setTimeout(renderPlots, 100);
+                    };
+
+                    onMounted(() => {
+                        renderPlots();
+                        window.addEventListener("resize", handleResize);
+                    });
+
+                    return {
+                        s0,
+                        strike,
+                        sigma,
+                        t,
+                        r,
+                        q,
+                        bsCallPrice,
+                    };
+                },
+            }).mount("#app");
+        </script>
+    </body>
+</html>

@@ -1,4 +1,13 @@
 node_modules/
 .vitepress/dist/
 .vitepress/cache/
-.DS_Store
+
+.py[cod]
+__pycache__/
+.ipynb_checkpoints/
+
+.antigravitycli/
+
+proto-claude/
+legacy/
+proto/

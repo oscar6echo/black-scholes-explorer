@@ -1,64 +1,87 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: 'Black-Scholes Explorer',
-  description: 'Option pricing from first principles — PDE, lognormal, Monte Carlo, Greeks, vol surface',
+    title: "Black-Scholes Explorer",
+    description:
+        "Option pricing from first principles — PDE, lognormal, Monte Carlo, Greeks, vol surface",
 
-  srcDir: './docs',
+    appearance: "force-dark",
+    srcDir: "./docs",
 
-  ignoreDeadLinks: true,
+    lang: "en-US",
+    cleanUrls: true,
+    base: "/black-scholes-explorer/",
 
-  markdown: {
-    math: true,
-    footnote: true,
-  },
+    markdown: {
+        math: true,
+    },
 
-  themeConfig: {
-    nav: [
-      { text: 'Home', link: '/' },
-      { text: 'Calculator', link: '/08-calculator' },
-    ],
+    vite: {
+        logLevel: "info",
+        build: {
+            chunkSizeWarningLimit: 2200,
+        },
+    },
 
-    sidebar: [
-      { text: 'Overview', link: '/' },
-      {
-        text: 'Theory',
-        items: [
-          { text: '1. The BS PDE', link: '/01-bs-pde' },
-          { text: '2. Solving the PDE', link: '/02-pde-solution' },
-          { text: '3. Lognormal & Risk-Neutral Measure', link: '/03-lognormal' },
+    themeConfig: {
+        nav: [
+            { text: "Overview", link: "/overview" },
+            { text: "Theory", link: "/1-ito-lemma" },
+            { text: "Pricing Intuition", link: "/6-pricing-intuition" },
+            { text: "Extensions", link: "/8-vol-surface" },
         ],
-      },
-      {
-        text: 'Intuition',
-        items: [
-          { text: '4. Monte Carlo & Physical Intuition', link: '/04-pricing-intuition' },
-          { text: '5. Greeks as Geometry', link: '/05-greeks' },
-        ],
-      },
-      {
-        text: 'Extensions',
-        items: [
-          { text: '6. Put/Call Parity', link: '/06-putcall-parity' },
-          { text: '7. Implied Vol & Vol Surface', link: '/07-vol-surface' },
-        ],
-      },
-      { text: 'Calculator', link: '/08-calculator' },
-      {
-        text: 'Appendices',
-        items: [
-          { text: "A1. Itô's Lemma", link: '/A1-ito-lemma' },
-          { text: 'A2. Change of Measure', link: '/A2-change-of-measure' },
-          { text: 'A3. Acronyms', link: '/A3-acronyms' },
-        ],
-      },
-    ],
 
-    socialLinks: [
-      {
-        icon: 'github',
-        link: 'https://github.com/oscar6echo/black-scholes-explo',
-      },
-    ],
-  },
-})
+        sidebar: [
+            { text: "Overview", link: "/overview" },
+            {
+                text: "Theory",
+                items: [
+                    { text: "1. Itô's Lemma", link: "/1-ito-lemma" },
+                    {
+                        text: "2. BSM PDE Derivation",
+                        link: "/2-black-scholes-merton-pde",
+                    },
+                    {
+                        text: "3. Closed-Form Solution",
+                        link: "/3-closed-formula",
+                    },
+                    { text: "4. Option Greeks", link: "/4-greeks" },
+                    {
+                        text: "5. Theory Reference",
+                        link: "/5-theory-reference",
+                    },
+                ],
+            },
+            {
+                text: "Pricing Intuition",
+                items: [
+                    {
+                        text: "6. Intuition & Monte Carlo",
+                        link: "/6-pricing-intuition",
+                    },
+                    { text: "7. BSM Viewer", link: "/7-bsm-viewer" },
+                ],
+            },
+            {
+                text: "Extensions",
+                items: [
+                    { text: "8. Volatility Surface", link: "/8-vol-surface" },
+                ],
+            },
+            {
+                text: "Annex",
+                items: [
+                    { text: "Math Reference", link: "/annex-math" },
+                    { text: "Python SymPy", link: "/annex-python" },
+                ],
+            },
+        ],
+
+        socialLinks: [
+            {
+                icon: "github",
+                link: "https://github.com/oscar6echo/black-scholes-explorer",
+            },
+        ],
+    },
+});

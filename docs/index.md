@@ -2,60 +2,85 @@
 layout: home
 
 hero:
-  name: Black-Scholes Explorer
+  name: Black-Scholes-Merton Explorer
   text: Option pricing from first principles
   tagline: >
-    A layered journey from the BS differential equation through Monte Carlo intuition
-    to the vol surface — built for quants who want to understand the "why".
+    A layered journey from Itô's Lemma through the BSM PDE and Monte Carlo intuition
+    to the Volatility Surface — built for students and professionals.
+  image:
+    src: /img/option-pricing-3d.png
+    alt: Black-Scholes-Merton Option Pricing 3D Surface
   actions:
     - theme: brand
-      text: Start — The BS PDE
-      link: /01-bs-pde
+      text: Overview
+      link: /overview
     - theme: alt
-      text: Jump to intuition
-      link: /04-pricing-intuition
+      text: Viewer
+      link: /7-bsm-viewer
 
 features:
-  - title: 1. The BS PDE
+  - icon:
+      src: /icons/icon-1.svg
+      alt: Itô's Lemma
+    title: 1. Itô's Lemma
     details: >
-      Derive the Black-Scholes PDE from Itô's lemma and delta-hedging.
-      Understand why the real-world drift μ drops out entirely.
-    link: /01-bs-pde
-  - title: 2. Solving the PDE
+      Stochastic counterpart to the chain rule for Wiener processes.
+      Rigorous evaluation of expectation, variance, and the Itô correction.
+    link: /1-ito-lemma
+  - icon:
+      src: /icons/icon-2.svg
+      alt: BSM PDE Derivation
+    title: 2. BSM PDE Derivation
     details: >
-      Three changes of variables reduce the PDE to the heat equation.
-      The BS formula emerges from a Gaussian convolution integral.
-    link: /02-pde-solution
-  - title: 3. Lognormal & Risk-Neutral Measure
+      Geometric Brownian Motion stock dynamics modeling, dynamically hedged
+      portfolios, and BSM partial differential equation formulation.
+    link: /2-black-scholes-merton-pde
+  - icon:
+      src: /icons/icon-3.svg
+      alt: Closed-Form Solution
+    title: 3. Closed-Form Solution
     details: >
-      Under the risk-neutral measure Q, stock prices are lognormal.
-      Option pricing is an expectation over this distribution.
-    link: /03-lognormal
-  - title: 4. Monte Carlo & Physical Intuition
+      Risk-neutral pricing measure transition, expectation integration, and call/put
+      pricing formula derivation via put-call parity.
+    link: /3-closed-formula
+  - icon:
+      src: /icons/icon-4.svg
+      alt: Option Greeks
+    title: 4. Option Greeks
     details: >
-      A four-panel scroll visualization: future price distribution,
-      discounted density, payoff overlay, and the contribution curve
-      whose area equals the option price.
-    link: /04-pricing-intuition
-  - title: 5. Greeks as Geometry
+      Differentiating call/put analytical pricing formulas to derive closed-form
+      sensitivities (Delta, Gamma, Vega, Theta, Rho) via the density lemma.
+    link: /4-greeks
+  - icon:
+      src: /icons/icon-5.svg
+      alt: Theory Reference
+    title: 5. Theory Reference
     details: >
-      Delta, Gamma, Vega, Theta, Rho — each one is a geometric
-      property of the contribution curve. See how the formula moves.
-    link: /05-greeks
-  - title: 6. Put/Call Parity
+      A consolidated mathematical reference summarizing all stochastic dynamics,
+      closed-form solutions, and option Greeks in clear, compact tables.
+    link: /5-theory-reference
+  - icon:
+      src: /icons/icon-6.svg
+      alt: Intuition & Monte Carlo
+    title: 6. Intuition & Monte Carlo
     details: >
-      A model-free result: C − P = forward price.
-      A put is a call with a short forward.
-    link: /06-putcall-parity
-  - title: 7. Implied Vol & Vol Surface
+      Deconstructing the expected payoff present-value area under the contribution
+      curve, and numeric lognormal stochastic path simulations.
+    link: /6-pricing-intuition
+  - icon:
+      src: /icons/icon-7.svg
+      alt: BSM Viewer
+    title: 7. BSM Viewer
     details: >
-      The market smile encodes the risk-neutral density via
-      Breeden-Litzenberger. The four-panel picture, but with
-      the true implied distribution.
-    link: /07-vol-surface
-  - title: 8. Calculator
+      Interactive analytical dashboard to visualize option pricing and Greek
+      sensitivity curves across spot, rate, and volatility dimensions.
+    link: /7-bsm-viewer
+  - icon:
+      src: /icons/icon-8.svg
+      alt: Volatility Surface
+    title: 8. Volatility Surface
     details: >
-      The modernized interactive calculator: price, Greeks,
-      sensitivity curves, 3D surface.
-    link: /08-calculator
+      Market implied volatility smiles and skews, Newton-Raphson solvers,
+      and extracting probability densities via the Breeden-Litzenberger theorem.
+    link: /8-vol-surface
 ---

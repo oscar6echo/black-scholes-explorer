@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Black-Scholes-Merton Interactive Terminal</title>
+        <!-- Tailwind CSS CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Google Fonts: Inter & Fira Code -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        >
+        <!-- Vue 3, D3, Observable Plot, and Vis.js Graph3D CDN -->
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"
+        ></script>
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css"
+            rel="stylesheet"
+            type="text/css"
+        />
+        <script
+            type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"
+        ></script>
+
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+            }
+            .fira-mono {
+                font-family: "Fira Code", monospace;
+            }
+            .fira-mono-math {
+                font-family: "Fira Code", monospace;
+                font-size: 12px;
+                font-weight: 500;
+                color: #d2a6ff;
+            }
+            /* Hide number input spinners (arrows) for a cleaner dark mode appearance */
+            input[type="number"]::-webkit-outer-spin-button,
+            input[type="number"]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            input[type="number"] {
+                appearance: textfield;
+                -moz-appearance: textfield;
+            }
+            /* Custom Slider Styling */
+            input[type="range"] {
+                -webkit-appearance: none;
+                appearance: none;
+                background: #30363d;
+                height: 5px;
+                border-radius: 3px;
+                outline: none;
+            }
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: #58a6ff;
+                cursor: pointer;
+                border: 2px solid #161b22;
+                transition: background 0.15s;
+            }
+            input[type="range"]::-webkit-slider-thumb:hover {
+                background: #79c0ff;
+            }
+            /* Hide default scrollbars */
+            ::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #0d1117;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #30363d;
+                border-radius: 3px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #8b949e;
+            }
+        </style>
+    </head>
+    <body class="bg-[#0d1117] text-[#e6edf3] h-screen overflow-hidden">
+        <div id="app" class="h-full flex flex-col">
+            <!-- Top Terminal Nav Bar -->
+            <header
+                class="bg-[#161b22] border-b border-[#30363d] px-6 py-3 flex items-center justify-between z-10 shrink-0"
+            >
+                <div class="flex items-center gap-3">
+                    <svg
+                        class="w-6 h-6 text-[#58a6ff]"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                    </svg>
+                    <div>
+                        <h1 class="text-base font-semibold tracking-tight">
+                            Black-Scholes-Merton Pricing & Greeks Terminal
+                        </h1>
+                        <p class="text-xs text-[#8b949e] font-light">
+                            Dynamic 2D Curve and 3D Surface parameter
+                            deformation dashboard
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Mode Selector Controls -->
+                <div class="flex items-center gap-4">
+                    <!-- 2D / 3D Toggle -->
+                    <div
+                        class="flex bg-[#21262d] rounded-md p-0.5 border border-[#30363d]"
+                    >
+                        <button
+                            @click="graphType = '2D'"
+                            :class="graphType === '2D' ? 'bg-[#58a6ff] text-[#0d1117] font-semibold' : 'text-[#8b949e] hover:text-[#e6edf3]'"
+                            class="px-3 py-1 rounded text-xs transition duration-150"
+                        >
+                            2D Curve
+                        </button>
+                        <button
+                            @click="graphType = '3D'"
+                            :class="graphType === '3D' ? 'bg-[#58a6ff] text-[#0d1117] font-semibold' : 'text-[#8b949e] hover:text-[#e6edf3]'"
+                            class="px-3 py-1 rounded text-xs transition duration-150"
+                        >
+                            3D Surface
+                        </button>
+                    </div>
+
+                    <!-- Call / Put Toggle -->
+                    <div
+                        class="flex bg-[#21262d] rounded-md p-0.5 border border-[#30363d]"
+                    >
+                        <button
+                            @click="optionType = 'Call'"
+                            :class="optionType === 'Call' ? 'bg-[#58a6ff] text-[#0d1117] font-semibold' : 'text-[#8b949e] hover:text-[#e6edf3]'"
+                            class="px-3 py-1 rounded text-xs transition duration-150"
+                        >
+                            Call
+                        </button>
+                        <button
+                            @click="optionType = 'Put'"
+                            :class="optionType === 'Put' ? 'bg-[#f2ca30] text-[#0d1117] font-semibold' : 'text-[#8b949e] hover:text-[#e6edf3]'"
+                            class="px-3 py-1 rounded text-xs transition duration-150"
+                        >
+                            Put
+                        </button>
+                    </div>
+
+                    <!-- Terminal Status Indicator -->
+                    <div
+                        class="flex items-center gap-2 px-3 py-1 rounded bg-black/30 border border-[#30363d] text-xs"
+                    >
+                        <span
+                            :class="statusClass"
+                            class="w-2 h-2 rounded-full animate-pulse"
+                        ></span>
+                        <span class="fira-mono text-[#8b949e]"
+                        >{{ statusText }}</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Workspace Layout -->
+            <div class="flex-1 flex overflow-hidden min-h-0">
+                <!-- Left Controls Sidebar -->
+                <aside
+                    class="w-[360px] bg-[#161b22] border-r border-[#30363d] flex flex-col min-h-0 overflow-y-auto shrink-0 select-none"
+                >
+                    <!-- Section: Parameter Matrix Picker -->
+                    <div class="p-4 border-b border-[#30363d]">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3
+                                class="text-xs font-semibold text-[#8b949e] uppercase tracking-wider m-0"
+                            >
+                                1. Parameters Grid
+                            </h3>
+                            <!-- 3D Steps Resolution Control -->
+                            <div
+                                class="flex items-center gap-1 bg-[#21262d] border border-[#30363d] rounded px-2 py-0.5 whitespace-nowrap shrink-0"
+                                v-if="graphType === '3D'"
+                            >
+                                <span
+                                    class="text-[11px] text-[#8b949e] font-medium whitespace-nowrap"
+                                >nb steps:</span>
+                                <input
+                                    type="number"
+                                    min="10"
+                                    max="80"
+                                    step="5"
+                                    v-model.number="steps3D"
+                                    class="w-7 bg-transparent text-right fira-mono text-[11px] text-[#58a6ff] focus:outline-none outline-none border-none p-0"
+                                />
+                            </div>
+                        </div>
+
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr
+                                    class="text-[#8b949e] border-b border-[#30363d]/50"
+                                >
+                                    <th
+                                        class="pb-2 font-medium w-8 text-center"
+                                    >
+                                        X
+                                    </th>
+                                    <th
+                                        class="pb-2 font-medium w-8 text-center"
+                                        v-if="graphType === '3D'"
+                                    >
+                                        Y
+                                    </th>
+                                    <th class="pb-2 font-medium">
+                                        Parameter (Value)
+                                    </th>
+                                    <th
+                                        class="pb-2 font-medium w-16 text-right"
+                                    >
+                                        Min
+                                    </th>
+                                    <th
+                                        class="pb-2 font-medium w-16 text-right"
+                                    >
+                                        Max
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="param in parameters"
+                                    :key="param.key"
+                                    class="border-b border-[#30363d]/20 hover:bg-white/[0.01]"
+                                >
+                                    <!-- X-Axis selection -->
+                                    <td class="py-2.5 text-center">
+                                        <input
+                                            type="radio"
+                                            :value="param.key"
+                                            v-model="xAxisKey"
+                                            :name="'xAxis'"
+                                            class="accent-[#58a6ff] cursor-pointer"
+                                        />
+                                    </td>
+                                    <!-- Y-Axis selection (only 3D) -->
+                                    <td
+                                        class="py-2.5 text-center"
+                                        v-if="graphType === '3D'"
+                                    >
+                                        <input
+                                            type="radio"
+                                            :value="param.key"
+                                            v-model="yAxisKey"
+                                            :name="'yAxis'"
+                                            class="accent-[#58a6ff] cursor-pointer"
+                                        />
+                                    </td>
+                                    <!-- Label & active display -->
+                                    <td class="py-2.5">
+                                        <div class="font-medium text-[#e6edf3]">
+                                            {{ param.label }}
+                                        </div>
+                                        <div
+                                            class="text-[10px] text-[#8b949e] fira-mono mt-0.5"
+                                        >
+                                            {{ formatParamValue(param.key,
+                                            param.value) }}
+                                        </div>
+                                    </td>
+                                    <!-- Min Range boundary input -->
+                                    <td class="py-2.5 pl-2">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            v-model.number="param.min"
+                                            class="w-full bg-[#21262d] border border-[#30363d] rounded px-1.5 py-0.5 text-right fira-mono text-[10px] text-[#8b949e] focus:border-[#58a6ff] outline-none"
+                                        />
+                                    </td>
+                                    <!-- Max Range boundary input -->
+                                    <td class="py-2.5 pl-2">
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            v-model.number="param.max"
+                                            class="w-full bg-[#21262d] border border-[#30363d] rounded px-1.5 py-0.5 text-right fira-mono text-[10px] text-[#8b949e] focus:border-[#58a6ff] outline-none"
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Section: Parameter Adjustment Sliders -->
+                    <div
+                        class="p-4 border-b border-[#30363d] flex flex-col gap-4"
+                    >
+                        <h3
+                            class="text-xs font-semibold text-[#8b949e] uppercase tracking-wider"
+                        >
+                            2. Fixed Parameters Sweep
+                        </h3>
+
+                        <div
+                            v-for="param in parameters"
+                            :key="'slider-' + param.key"
+                        >
+                            <!-- Render slider ONLY when parameter is NOT selected as an active plotting axis -->
+                            <div
+                                class="flex flex-col gap-1.5"
+                                v-if="param.key !== xAxisKey && (graphType === '2D' || param.key !== yAxisKey)"
+                            >
+                                <div
+                                    class="flex justify-between items-center text-xs"
+                                >
+                                    <span class="text-[#8b949e] font-light"
+                                    >{{ param.name }}</span>
+                                    <span
+                                        class="fira-mono font-medium text-[#58a6ff]"
+                                    >{{ formatParamValue(param.key, param.value)
+                                        }}</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    :min="param.sliderMin"
+                                    :max="param.sliderMax"
+                                    :step="param.sliderStep"
+                                    v-model.number="param.value"
+                                    class="w-full"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Dynamic Output Readout & Plot Selector -->
+                    <div class="p-4 flex-1 flex flex-col min-h-0">
+                        <h3
+                            class="text-xs font-semibold text-[#8b949e] uppercase tracking-wider mb-3"
+                        >
+                            3. Outputs & Plotting Variable (Z / Y)
+                        </h3>
+
+                        <!-- 2D Optional Comparison Toggles -->
+                        <div v-if="graphType === '2D'" class="flex flex-col gap-2 mb-3 bg-[#21262d]/50 border border-[#30363d] rounded-md p-2.5 select-none">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="compareCallPut" v-model="compareCallPut" class="accent-[#58a6ff] cursor-pointer" />
+                                <label for="compareCallPut" class="text-xs text-[#8b949e] font-medium cursor-pointer hover:text-[#e6edf3]">
+                                    Compare Call vs Put
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-2" v-if="zAxisKey === 'price'">
+                                <input type="checkbox" id="showIntrinsicPayoff" v-model="showIntrinsicPayoff" class="accent-[#58a6ff] cursor-pointer" />
+                                <label for="showIntrinsicPayoff" class="text-xs text-[#8b949e] font-medium cursor-pointer hover:text-[#e6edf3]">
+                                    Show Intrinsic Payoff
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-2" v-if="zAxisKey === 'd1' || zAxisKey === 'd2' || zAxisKey === 'Nd1' || zAxisKey === 'Nd2'">
+                                <input type="checkbox" id="compareD1D2" v-model="compareD1D2" class="accent-[#58a6ff] cursor-pointer" />
+                                <label for="compareD1D2" class="text-xs text-[#8b949e] font-medium cursor-pointer hover:text-[#e6edf3]">
+                                    Compare {{ (zAxisKey === 'd1' || zAxisKey === 'd2') ? 'd₁ vs d₂' : 'N(d₁) vs N(d₂)' }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div
+                            class="flex-1 overflow-y-auto pr-1 flex flex-col gap-1.5 border border-[#30363d]/50 bg-black/10 rounded-md p-2"
+                        >
+                            <div
+                                v-for="output in outputs"
+                                :key="output.key"
+                                :class="zAxisKey === output.key ? 'bg-white/[0.04] border-[#58a6ff]/40' : 'border-transparent hover:bg-white/[0.01]'"
+                                class="flex items-center justify-between px-2.5 py-2 border rounded-md transition duration-150 select-none"
+                            >
+                                <!-- Selection Radio & Name -->
+                                <label
+                                    class="flex items-center gap-3 cursor-pointer flex-1 py-0.5"
+                                >
+                                    <input
+                                        type="radio"
+                                        :value="output.key"
+                                        v-model="zAxisKey"
+                                        name="outputSelection"
+                                        class="accent-[#58a6ff]"
+                                    />
+                                    <div class="flex flex-col">
+                                        <span
+                                            class="text-xs font-medium text-[#e6edf3]"
+                                        >{{ output.name }}</span>
+                                        <span
+                                            class="text-[10px] text-[#8b949e] mt-0.5 font-light"
+                                            v-html="output.desc"
+                                        ></span>
+                                    </div>
+                                </label>
+
+                                <!-- Real-time Numerical Value readout -->
+                                <span
+                                    class="fira-mono text-xs font-semibold text-[#58a6ff]"
+                                    :class="optionType === 'Call' ? 'text-[#58a6ff]' : 'text-[#f2ca30]'"
+                                >
+                                    {{ formatOutputValue(output.key,
+                                    calculatedValues[output.key]) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Right Main Visualization Area -->
+                <main
+                    class="flex-1 bg-black/20 flex flex-col min-h-0 overflow-hidden relative"
+                >
+                    <!-- 3D Plot Area -->
+                    <div
+                        v-show="graphType === '3D'"
+                        class="flex-1 flex flex-col min-h-0"
+                    >
+                        <!-- Vis.js 3D Plot container -->
+                        <div
+                            id="chart-3d"
+                            class="flex-1 w-full h-full relative"
+                            ref="chart3dEl"
+                        >
+                        </div>
+
+                        <!-- 3D Interactive Legend Panel -->
+                        <div
+                            class="absolute bottom-4 right-4 bg-[#161b22]/90 backdrop-blur border border-[#30363d] px-4 py-3 rounded-lg shadow-xl text-xs z-10 flex flex-col gap-2 pointer-events-none select-none max-w-sm"
+                        >
+                            <div
+                                class="font-semibold text-center border-b border-[#30363d]/50 pb-1.5 mb-1 text-[#58a6ff]"
+                            >
+                                3D Mapping Coordinates
+                            </div>
+                            <div class="flex justify-between gap-6">
+                                <span class="text-[#8b949e]">X-Axis:</span><span
+                                    class="fira-mono font-medium"
+                                >{{ unicodeLabels[xAxisKey] }}</span>
+                            </div>
+                            <div class="flex justify-between gap-6">
+                                <span class="text-[#8b949e]">Y-Axis:</span><span
+                                    class="fira-mono font-medium"
+                                >{{ unicodeLabels[yAxisKey] }}</span>
+                            </div>
+                            <div class="flex justify-between gap-6">
+                                <span class="text-[#8b949e]">Z-Axis:</span><span
+                                    class="fira-mono font-semibold"
+                                    :class="optionType === 'Call' ? 'text-[#58a6ff]' : 'text-[#f2ca30]'"
+                                >{{ unicodeLabels[zAxisKey] }}</span>
+                            </div>
+                            <div
+                                class="text-[10px] text-[#8b949e] border-t border-[#30363d]/30 pt-1.5 mt-1 font-light italic"
+                            >
+                                💡 Left-click and drag to rotate surface. Scroll
+                                to zoom.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2D Plot Area -->
+                    <div
+                        v-show="graphType === '2D'"
+                        class="flex-1 flex flex-col min-h-0 p-6 relative"
+                    >
+                        <!-- Observable Plot container -->
+                        <div
+                            class="flex-1 bg-[#161b22] border border-[#30363d] rounded-xl shadow-inner p-6 flex flex-col min-h-0 relative"
+                        >
+                            <div
+                                id="chart-2d"
+                                class="flex-1 w-full h-full min-h-0 flex flex-col items-center justify-center"
+                                ref="chart2dEl"
+                            >
+                            </div>
+                        </div>
+
+                        <!-- 2D Interactive Legend Panel -->
+                        <div
+                            class="absolute bottom-10 right-10 bg-[#161b22]/90 backdrop-blur border border-[#30363d] px-4 py-3 rounded-lg shadow-xl text-xs z-10 flex flex-col gap-2 pointer-events-none select-none"
+                        >
+                            <div class="font-semibold text-center border-b border-[#30363d]/50 pb-1.5 mb-1 text-[#58a6ff]">2D Mapping Legend</div>
+                            
+                            <!-- Standard Curve (when not comparing Call/Put or d1/d2) -->
+                            <div class="flex items-center gap-3" v-if="!compareCallPut && !(compareD1D2 && (zAxisKey === 'd1' || zAxisKey === 'd2' || zAxisKey === 'Nd1' || zAxisKey === 'Nd2'))">
+                                <span
+                                    class="w-3.5 h-1.5 rounded-full"
+                                    :style="{ backgroundColor: optionType === 'Call' ? '#58a6ff' : '#f2ca30' }"
+                                ></span>
+                                <span class="font-medium text-[#e6edf3]"
+                                >European {{ optionType }} {{
+                                    unicodeLabels[zAxisKey] }} Curve</span>
+                            </div>
+                            
+                            <!-- Dual Curves (when comparing Call/Put) -->
+                            <template v-if="compareCallPut">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3.5 h-1.5 rounded-full bg-[#58a6ff]"></span>
+                                    <span class="font-medium text-[#e6edf3]">European Call {{ unicodeLabels[zAxisKey] }} Curve</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3.5 h-1.5 rounded-full bg-[#f2ca30]"></span>
+                                    <span class="font-medium text-[#e6edf3]">European Put {{ unicodeLabels[zAxisKey] }} Curve</span>
+                                </div>
+                            </template>
+
+                            <!-- Dual Curves (when comparing d1/d2 or N(d1)/N(d2)) -->
+                            <template v-if="compareD1D2 && !compareCallPut && (zAxisKey === 'd1' || zAxisKey === 'd2' || zAxisKey === 'Nd1' || zAxisKey === 'Nd2')">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3.5 h-1.5 rounded-full bg-[#58a6ff]"></span>
+                                    <span class="font-medium text-[#e6edf3]">{{ (zAxisKey === 'd1' || zAxisKey === 'd2') ? 'Boundary factor d₁' : 'Probability N(d₁)' }}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3.5 h-1.5 rounded-full bg-[#f2ca30]"></span>
+                                    <span class="font-medium text-[#e6edf3]">{{ (zAxisKey === 'd1' || zAxisKey === 'd2') ? 'Boundary factor d₂' : 'Probability N(d₂)' }}</span>
+                                </div>
+                            </template>
+
+                            <!-- Payoff Legend -->
+                            <div class="flex items-center gap-3" v-if="showIntrinsicPayoff && zAxisKey === 'price'">
+                                <span class="w-3.5 h-0.5 border-t border-dashed border-[#8b949e]"></span>
+                                <span class="font-medium text-[#8b949e]">Intrinsic Payoff Boundary</span>
+                            </div>
+
+                            <div
+                                class="text-[10px] text-[#8b949e] border-t border-[#30363d]/30 pt-1.5 mt-1 font-light italic"
+                            >
+                                💡 Vertical dashed line shows the current active
+                                parameter sweep coordinate.
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <script>
+    /**
+     * ============================================================================
+     * Black-Scholes-Merton Interactive Quantitative Terminal
+     * ============================================================================
+     * 
+     * ARCHITECTURE OVERVIEW:
+     * This dashboard is a single-file application merging Vue 3 (reactivity),
+     * Observable Plot (2D SVG curves), and Vis.js Graph3D (interactive WebGL meshes).
+     * 
+     * CORE MODULES:
+     * 1. Vue 3 Reactive State Manager:
+     *    - `parameters`: Holds base Spot, Strike, Maturity, Volatility, Rates, and Dividends.
+     *    - `compareCallPut`, `showIntrinsicPayoff`, `compareD1D2`: Booleans toggled by 2D comparison inputs.
+     *    - `xAxisKey` & `yAxisKey`: Define active sweep variables mapped on the X and Y coordinates.
+     * 
+     * 2. BSM Analytical Engine (`computeAllBSM`):
+     *    - Contains exact mathematical formulations for European pricing, cumulative probability boundaries 
+     *      (d1, d2, N(d1), N(d2)), and Greek sensitivities (Delta, Gamma, Vega, Theta, Rho, Voma).
+     * 
+     * 3. 2D Curve sweep & plotting (`render2DPlot`):
+     *    - Sweeps 100 points along the active X-axis parameter, populating data arrays.
+     *    - Renders curves via Observable Plot with support for multiple overlays (e.g. Call vs Put).
+     * 
+     * 4. 3D Surface sweep & plotting (`render3DPlot`):
+     *    - Generates a grid of resolution equal to `steps3D` across both X and Y sweep parameters.
+     *    - Feeds height values (Z-axis) into the Vis.js Graph3d WebGL renderer.
+     * 
+     * 5. Reactive Watch Loop:
+     *    - Watches parameters deep, automatically calling `nextTick(() => drawPlots())` to refresh canvas.
+     * 
+     * CONTRIBUTING/EVOLVING:
+     * - To add a new swept parameter: Add its key, label, limits, and step size to `parameters` ref.
+     * - To add a new output/Greek sensitivity: Add its details to `outputs` ref and update `computeAllBSM`.
+     * ============================================================================
+     */
+            const { createApp, ref, computed, onMounted, watch, nextTick } =
+                Vue;
+
+            // Normal Cumulative Distribution Function (CDF)
+            function erf(x) {
+                const a1 = 0.254829592;
+                const a2 = -0.284496736;
+                const a3 = 1.421413741;
+                const a4 = -1.453152027;
+                const a5 = 1.061405429;
+                const p = 0.3275911;
+                const sign = (x >= 0) ? 1 : -1;
+                x = Math.abs(x);
+                const t = 1.0 / (1.0 + p * x);
+                const y = 1.0 -
+                    (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t *
+                        Math.exp(-x * x);
+                return sign * y;
+            }
+
+            function cdfNormal(x) {
+                return 0.5 * (1.0 + erf(x / Math.sqrt(2.0)));
+            }
+
+            function pdfNormal(x) {
+                return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+            }
+
+            // Mathematical solver for BSM pricing and Greeks
+            function computeAllBSM(S, K, T, r, q, sigma, optionType) {
+                const isCall = optionType === "Call";
+                const t_sqrt = Math.sqrt(T);
+
+                if (T <= 0.00001 || sigma <= 0.00001) {
+                    const payoffVal = isCall
+                        ? Math.max(S - K, 0)
+                        : Math.max(K - S, 0);
+                    return {
+                        d1: 0,
+                        Nd1: S > K ? 1 : 0,
+                        Nnd1: S < K ? 1 : 0,
+                        phid1: 0,
+                        d2: 0,
+                        Nd2: S > K ? 1 : 0,
+                        Nnd2: S < K ? 1 : 0,
+                        phid2: 0,
+                        erT: 1,
+                        erTK: K,
+                        price: payoffVal,
+                        delta: isCall ? (S > K ? 1 : 0) : (S < K ? -1 : 0),
+                        gamma: 0,
+                        vega: 0,
+                        theta: 0,
+                        rho: 0,
+                        voma: 0,
+                        payoff: payoffVal,
+                        discPayoff: payoffVal,
+                    };
+                }
+
+                const d1 =
+                    (Math.log(S / K) + (r - q + 0.5 * sigma * sigma) * T) /
+                    (sigma * t_sqrt);
+                const d2 = d1 - sigma * t_sqrt;
+
+                const Nd1 = cdfNormal(d1);
+                const Nd2 = cdfNormal(d2);
+                const Nnd1 = cdfNormal(-d1);
+                const Nnd2 = cdfNormal(-d2);
+                const phid1 = pdfNormal(d1);
+                const phid2 = pdfNormal(d2);
+
+                const eqT = Math.exp(-q * T);
+                const erT = Math.exp(-r * T);
+                const erTK = erT * K;
+
+                // Option Prices
+                const cPrice = S * eqT * Nd1 - K * erT * Nd2;
+                const pPrice = K * erT * Nnd2 - S * eqT * Nnd1;
+                const price = isCall ? cPrice : pPrice;
+
+                // Deltas
+                const cDelta = eqT * Nd1;
+                const pDelta = -eqT * Nnd1;
+                const delta = isCall ? cDelta : pDelta;
+
+                // Gamma & Vega
+                const gamma = (eqT * phid1) / (S * sigma * t_sqrt);
+                const vega = S * eqT * phid1 * t_sqrt;
+
+                // Theta (per year)
+                const term1 = -(S * eqT * phid1 * sigma) / (2 * t_sqrt);
+                const cTheta = term1 - r * K * erT * Nd2 + q * S * eqT * Nd1;
+                const pTheta = term1 + r * K * erT * Nnd2 - q * S * eqT * Nnd1;
+                const theta = isCall ? cTheta : pTheta;
+
+                // Rho
+                const cRho = K * T * erT * Nd2;
+                const pRho = -K * T * erT * Nnd2;
+                const rho = isCall ? cRho : pRho;
+
+                // Higher-Order Greek (Voma)
+                const voma = (vega * d1 * d2) / sigma;
+
+                // Payoffs
+                const payoff = isCall ? Math.max(S - K, 0) : Math.max(K - S, 0);
+                const discPayoff = erT * payoff;
+
+                return {
+                    d1,
+                    Nd1,
+                    Nnd1,
+                    phid1,
+                    d2,
+                    Nd2,
+                    Nnd2,
+                    phid2,
+                    erT,
+                    erTK,
+                    price,
+                    delta,
+                    gamma,
+                    vega,
+                    theta,
+                    rho,
+                    voma,
+                    payoff,
+                    discPayoff,
+                };
+            }
+
+            // Unicode Labels mapping for axis tags
+            const unicodeLabels = {
+                S: "Spot S₀",
+                K: "Strike K",
+                T: "Maturity T",
+                sigma: "Volatility σ",
+                r: "Rate r",
+                q: "Dividend q",
+                d1: "d₁",
+                d2: "d₂",
+                Nd1: "N(d₁)",
+                Nnd1: "N(-d₁)",
+                phid1: "N'(d₁)",
+                Nd2: "N(d₂)",
+                Nnd2: "N(-d₂)",
+                phid2: "N'(d₂)",
+                erT: "e⁻ʳᵀ",
+                erTK: "e⁻ʳᵀ K",
+                price: "Price V",
+                delta: "Delta Δ",
+                gamma: "Gamma Γ",
+                vega: "Vega ν",
+                theta: "Theta Θ",
+                rho: "Rho ρ",
+                voma: "Voma",
+                payoff: "Payoff",
+                discPayoff: "Discounted Payoff",
+            };
+
+            createApp({
+                setup() {
+                    const graphType = ref("3D");
+                    const optionType = ref("Call");
+
+                    // Parameter Configurations & Bounds
+                    const parameters = ref([
+                        {
+                            key: "S",
+                            name: "Spot Price (S₀)",
+                            label: "Spot (S₀)",
+                            value: 100,
+                            min: 0,
+                            max: 200,
+                            sliderMin: 10,
+                            sliderMax: 200,
+                            sliderStep: 1,
+                        },
+                        {
+                            key: "K",
+                            name: "Strike Price (K)",
+                            label: "Strike (K)",
+                            value: 100,
+                            min: 0,
+                            max: 200,
+                            sliderMin: 10,
+                            sliderMax: 200,
+                            sliderStep: 1,
+                        },
+                        {
+                            key: "T",
+                            name: "Maturity (T, yrs)",
+                            label: "Maturity (T)",
+                            value: 1.0,
+                            min: 0.05,
+                            max: 4.0,
+                            sliderMin: 0.05,
+                            sliderMax: 5.0,
+                            sliderStep: 0.05,
+                        },
+                        {
+                            key: "sigma",
+                            name: "Volatility (σ)",
+                            label: "Volatility (σ)",
+                            value: 0.20,
+                            min: 0.05,
+                            max: 1.0,
+                            sliderMin: 0.05,
+                            sliderMax: 1.5,
+                            sliderStep: 0.01,
+                        },
+                        {
+                            key: "r",
+                            name: "Interest Rate (r)",
+                            label: "Rate (r)",
+                            value: 0.04,
+                            min: 0.00,
+                            max: 0.15,
+                            sliderMin: 0.00,
+                            sliderMax: 0.20,
+                            sliderStep: 0.005,
+                        },
+                        {
+                            key: "q",
+                            name: "Dividend Yield (q)",
+                            label: "Dividend (q)",
+                            value: 0.00,
+                            min: 0.00,
+                            max: 0.12,
+                            sliderMin: 0.00,
+                            sliderMax: 0.15,
+                            sliderStep: 0.005,
+                        },
+                    ]);
+
+                    const xAxisKey = ref("S");
+                    const yAxisKey = ref("sigma"); // Active only in 3D
+                    const zAxisKey = ref("price"); // Y-axis in 2D, Z-axis in 3D
+                    const steps3D = ref(40); // 3D plot steps resolution (nb steps x, y)
+                    const compareCallPut = ref(false);
+                    const showIntrinsicPayoff = ref(false);
+                    const compareD1D2 = ref(false);
+
+                    const outputs = ref([
+                        {
+                            key: "price",
+                            name: "Option Price (V)",
+                            desc: "Fair value of European option",
+                        },
+                        {
+                            key: "delta",
+                            name: "Delta (Δ)",
+                            desc:
+                                'Price rate of change: <span class="fira-mono-math">∂V/∂S</span>',
+                        },
+                        {
+                            key: "gamma",
+                            name: "Gamma (Γ)",
+                            desc:
+                                'Delta convexity: <span class="fira-mono-math">∂²V/∂S²</span>',
+                        },
+                        {
+                            key: "vega",
+                            name: "Vega (ν)",
+                            desc:
+                                'Volatility rate of change: <span class="fira-mono-math">∂V/∂σ</span>',
+                        },
+                        {
+                            key: "theta",
+                            name: "Theta (Θ)",
+                            desc:
+                                'Time decay rate: <span class="fira-mono-math">∂V/∂t</span>',
+                        },
+                        {
+                            key: "rho",
+                            name: "Rho (ρ)",
+                            desc:
+                                'Rates sensitivity: <span class="fira-mono-math">∂V/∂r</span>',
+                        },
+                        {
+                            key: "voma",
+                            name: "Voma",
+                            desc:
+                                'Vega convexity: <span class="fira-mono-math">∂²V/∂σ²</span>',
+                        },
+                        {
+                            key: "d1",
+                            name: "d₁",
+                            desc: "Probability upper boundary factor",
+                        },
+                        {
+                            key: "d2",
+                            name: "d₂",
+                            desc: "Call exercise probability boundary",
+                        },
+                        {
+                            key: "Nd1",
+                            name: "N(d₁)",
+                            desc: "Cumulative standard normal of d₁",
+                        },
+                        {
+                            key: "Nd2",
+                            name: "N(d₂)",
+                            desc: "Risk-neutral exercise probability",
+                        },
+                    ]);
+
+                    const chart3dEl = ref(null);
+                    const chart2dEl = ref(null);
+
+                    let graph3dInstance = null;
+
+                    // Reactive helpers to read current values of parameters
+                    const paramMap = computed(() => {
+                        const map = {};
+                        parameters.value.forEach((p) => {
+                            map[p.key] = p;
+                        });
+                        return map;
+                    });
+
+                    const S_val = computed(() => paramMap.value["S"].value);
+                    const K_val = computed(() => paramMap.value["K"].value);
+                    const T_val = computed(() => paramMap.value["T"].value);
+                    const sigma_val = computed(() =>
+                        paramMap.value["sigma"].value
+                    );
+                    const r_val = computed(() => paramMap.value["r"].value);
+                    const q_val = computed(() => paramMap.value["q"].value);
+
+                    // Validation status
+                    const isAxesValid = computed(() => {
+                        if (graphType.value === "3D") {
+                            return xAxisKey.value !== yAxisKey.value;
+                        }
+                        return true;
+                    });
+
+                    const statusClass = computed(() => {
+                        return isAxesValid.value
+                            ? "bg-[#58a6ff]"
+                            : "bg-[#ff7b72]";
+                    });
+
+                    const statusText = computed(() => {
+                        return isAxesValid.value
+                            ? "Status: Ok"
+                            : "Status: Error (X and Y must differ)";
+                    });
+
+                    // Compute static outputs at the current active slider coordinates
+                    const calculatedValues = computed(() => {
+                        return computeAllBSM(
+                            S_val.value,
+                            K_val.value,
+                            T_val.value,
+                            r_val.value,
+                            q_val.value,
+                            sigma_val.value,
+                            optionType.value,
+                        );
+                    });
+
+                    // Helper formatting functions
+                    function formatParamValue(key, val) {
+                        if (key === "S" || key === "K") {
+                            return `€${val.toFixed(2)}`;
+                        }
+                        if (key === "sigma") {
+                            return `${(val * 100).toFixed(0)}%`;
+                        }
+                        if (key === "T") return `${val.toFixed(2)} yrs`;
+                        if (key === "r" || key === "q") {
+                            return `${(val * 100).toFixed(1)}%`;
+                        }
+                        return val.toString();
+                    }
+
+                    function formatOutputValue(key, val) {
+                        if (val === undefined || isNaN(val)) return "undefined";
+                        if (["price", "erTK"].includes(key)) {
+                            return `€${val.toFixed(4)}`;
+                        }
+                        if (["gamma", "voma"].includes(key)) {
+                            return val.toFixed(5);
+                        }
+                        return val.toFixed(4);
+                    }
+
+                    // --- 3D Surface Rendering (Vis.js Graph3D) ---
+                    function render3DPlot() {
+                        if (!chart3dEl.value || !isAxesValid.value) return;
+
+                        const xAxis = xAxisKey.value;
+                        const yAxis = yAxisKey.value;
+                        const zAxis = zAxisKey.value;
+
+                        const xParam = paramMap.value[xAxis];
+                        const yParam = paramMap.value[yAxis];
+
+                        const steps = steps3D.value || 40;
+                        const data = new vis.DataSet();
+
+                        // Calculate surface coordinates
+                        for (let i = 0; i <= steps; i++) {
+                            const xVal = xParam.min +
+                                (xParam.max - xParam.min) * (i / steps);
+                            for (let j = 0; j <= steps; j++) {
+                                const yVal = yParam.min +
+                                    (yParam.max - yParam.min) * (j / steps);
+
+                                // Build parameter mapping
+                                let activeS = S_val.value;
+                                let activeK = K_val.value;
+                                let activeT = T_val.value;
+                                let activeSigma = sigma_val.value;
+                                let activeR = r_val.value;
+                                let activeQ = q_val.value;
+
+                                if (xAxis === "S") activeS = xVal;
+                                else if (xAxis === "K") activeK = xVal;
+                                else if (xAxis === "T") activeT = xVal;
+                                else if (xAxis === "sigma") activeSigma = xVal;
+                                else if (xAxis === "r") activeR = xVal;
+                                else if (xAxis === "q") activeQ = xVal;
+
+                                if (yAxis === "S") activeS = yVal;
+                                else if (yAxis === "K") activeK = yVal;
+                                else if (yAxis === "T") activeT = yVal;
+                                else if (yAxis === "sigma") activeSigma = yVal;
+                                else if (yAxis === "r") activeR = yVal;
+                                else if (yAxis === "q") activeQ = yVal;
+
+                                const res = computeAllBSM(
+                                    activeS,
+                                    activeK,
+                                    activeT,
+                                    activeR,
+                                    activeQ,
+                                    activeSigma,
+                                    optionType.value,
+                                );
+                                let zVal = res[zAxis];
+
+                                // Sanitize boundary values (like Spot S = 0 yielding NaN or -Infinity for d1, d2, voma) to prevent Vis.js from crashing
+                                if (zVal === undefined || isNaN(zVal)) {
+                                    zVal = 0.0;
+                                } else if (zVal === -Infinity) {
+                                    zVal = (zAxis === "d1" || zAxis === "d2")
+                                        ? -10.0
+                                        : 0.0;
+                                } else if (zVal === Infinity) {
+                                    zVal = (zAxis === "d1" || zAxis === "d2")
+                                        ? 10.0
+                                        : 0.0;
+                                } else if (zAxis === "d1" || zAxis === "d2") {
+                                    // Clamp normal distribution parameters between [-10, 10] for balanced visual scaling
+                                    zVal = Math.max(
+                                        -10.0,
+                                        Math.min(10.0, zVal),
+                                    );
+                                }
+
+                                data.add({ x: xVal, y: yVal, z: zVal });
+                            }
+                        }
+
+                        // Preserve current camera viewpoint so that fixed parameter sweeps do not reset the user's view
+                        let currentCamera = null;
+                        if (graph3dInstance) {
+                            try {
+                                currentCamera = graph3dInstance
+                                    .getCameraPosition();
+                            } catch (e) {
+                                console.warn(
+                                    "Could not retrieve camera position:",
+                                    e,
+                                );
+                            }
+                        }
+
+                        // Options for Graph3d
+                        const options = {
+                            width: "100%",
+                            height: "100%",
+                            style: "surface",
+                            showPerspective: true,
+                            showGrid: true,
+                            showShadow: false,
+                            keepAspectRatio: false,
+                            verticalRatio: 0.6,
+                            cameraPosition: currentCamera || {
+                                horizontal: 1.0,
+                                vertical: 0.45,
+                                distance: 1.85,
+                            },
+                            xLabel: unicodeLabels[xAxis],
+                            yLabel: unicodeLabels[yAxis],
+                            zLabel: unicodeLabels[zAxis],
+                            colormap: "rainbow",
+                            backgroundColor: "transparent",
+                            styleOpts: {
+                                fontColor: "#8b949e",
+                                fontSize: 12,
+                                gridColor: "#30363d",
+                                borderColor: "#30363d",
+                            },
+                        };
+
+                        if (graph3dInstance) {
+                            try {
+                                graph3dInstance.destroy();
+                            } catch (e) {
+                                console.warn(
+                                    "vis.Graph3d instance destroy failed:",
+                                    e,
+                                );
+                            }
+                        }
+
+                        chart3dEl.value.innerHTML = "";
+                        graph3dInstance = new vis.Graph3d(
+                            chart3dEl.value,
+                            data,
+                            options,
+                        );
+                    }
+
+                    // --- 2D Curve Rendering (Observable Plot) ---
+                    function render2DPlot() {
+                        if (!chart2dEl.value) return;
+                        chart2dEl.value.innerHTML = "";
+
+                        const xAxis = xAxisKey.value;
+                        const zAxis = zAxisKey.value;
+
+                        const xParam = paramMap.value[xAxis];
+                        const steps = 100;
+                        
+                        const dataCall = [];
+                        const dataPut = [];
+                        const dataPayoff = [];
+                        const dataSecond = [];
+
+                        for (let i = 0; i <= steps; i++) {
+                            const xVal = xParam.min + (xParam.max - xParam.min) * (i / steps);
+
+                            let activeS = S_val.value;
+                            let activeK = K_val.value;
+                            let activeT = T_val.value;
+                            let activeSigma = sigma_val.value;
+                            let activeR = r_val.value;
+                            let activeQ = q_val.value;
+
+                            if (xAxis === "S") activeS = xVal;
+                            else if (xAxis === "K") activeK = xVal;
+                            else if (xAxis === "T") activeT = xVal;
+                            else if (xAxis === "sigma") activeSigma = xVal;
+                            else if (xAxis === "r") activeR = xVal;
+                            else if (xAxis === "q") activeQ = xVal;
+
+                            const resCall = computeAllBSM(
+                                activeS, activeK, activeT, activeR, activeQ, activeSigma, "Call"
+                            );
+                            const resPut = computeAllBSM(
+                                activeS, activeK, activeT, activeR, activeQ, activeSigma, "Put"
+                            );
+
+                            function sanitize(val) {
+                                if (val === undefined || isNaN(val)) return 0.0;
+                                if (val === -Infinity) return (zAxis === "d1" || zAxis === "d2") ? -10.0 : 0.0;
+                                if (val === Infinity) return (zAxis === "d1" || zAxis === "d2") ? 10.0 : 0.0;
+                                if (zAxis === "d1" || zAxis === "d2") return Math.max(-10.0, Math.min(10.0, val));
+                                return val;
+                            }
+
+                            const yCall = sanitize(resCall[zAxis]);
+                            const yPut = sanitize(resPut[zAxis]);
+
+                            dataCall.push({ x: xVal, y: yCall });
+                            dataPut.push({ x: xVal, y: yPut });
+
+                            if (zAxis === "price") {
+                                const yPayoff = sanitize(optionType.value === "Call" ? resCall.payoff : resPut.payoff);
+                                dataPayoff.push({ x: xVal, y: yPayoff });
+                            }
+
+                            if (compareD1D2.value && (zAxis === "d1" || zAxis === "d2" || zAxis === "Nd1" || zAxis === "Nd2")) {
+                                const key1 = (zAxis === "d1" || zAxis === "d2") ? "d1" : "Nd1";
+                                const key2 = (zAxis === "d1" || zAxis === "d2") ? "d2" : "Nd2";
+                                dataCall[dataCall.length - 1] = { x: xVal, y: sanitize(resCall[key1]) };
+                                const ySecond = sanitize(resCall[key2]);
+                                dataSecond.push({ x: xVal, y: ySecond });
+                            }
+                        }
+
+                        // Active slider current coordinate projection on 2D curve
+                        let activeXVal = xParam.value;
+
+                        // Measure the container to size the plot reactively
+                        const width = chart2dEl.value.clientWidth || 800;
+                        const height = (chart2dEl.value.clientHeight || 500) * 0.70; // 70% vertical space occupation for balanced spacing
+
+                        const marks = [
+                            // Baseline at Y = 0 to clearly differentiate positive/negative regions (like call and put deltas)
+                            Plot.ruleY([0], {
+                                stroke: "#444c56",
+                                strokeWidth: 1.5,
+                            })
+                        ];
+
+                        // Draw lines based on active switches
+                        if (compareCallPut.value) {
+                            // Render both Call and Put
+                            marks.push(
+                                Plot.lineY(dataCall, {
+                                    x: "x",
+                                    y: "y",
+                                    stroke: "#58a6ff",
+                                    strokeWidth: 3,
+                                }),
+                                Plot.lineY(dataPut, {
+                                    x: "x",
+                                    y: "y",
+                                    stroke: "#f2ca30",
+                                    strokeWidth: 3,
+                                })
+                            );
+                        } else if (compareD1D2.value && (zAxis === "d1" || zAxis === "d2" || zAxis === "Nd1" || zAxis === "Nd2")) {
+                            // Render both d1 and d2 (or Nd1 and Nd2)
+                            marks.push(
+                                Plot.lineY(dataCall, {
+                                    x: "x",
+                                    y: "y",
+                                    stroke: "#58a6ff",
+                                    strokeWidth: 3,
+                                }),
+                                Plot.lineY(dataSecond, {
+                                    x: "x",
+                                    y: "y",
+                                    stroke: "#f2ca30",
+                                    strokeWidth: 3,
+                                })
+                            );
+                        } else {
+                            // Render standard selected option type
+                            const activeData = optionType.value === "Call" ? dataCall : dataPut;
+                            marks.push(
+                                Plot.lineY(activeData, {
+                                    x: "x",
+                                    y: "y",
+                                    stroke: optionType.value === "Call" ? "#58a6ff" : "#f2ca30",
+                                    strokeWidth: 3,
+                                })
+                            );
+                        }
+
+                        // Render optional intrinsic payoff boundary
+                        if (showIntrinsicPayoff.value && zAxis === "price") {
+                            marks.push(
+                                Plot.lineY(dataPayoff, {
+                                    x: "x",
+                                    y: "y",
+                                    stroke: "#8b949e",
+                                    strokeWidth: 2,
+                                    strokeDasharray: "4,4",
+                                })
+                            );
+                        }
+
+                        // Active sweep coordinate vertical line
+                        marks.push(
+                            Plot.ruleX([activeXVal], {
+                                stroke: "#30363d",
+                                strokeWidth: 1.5,
+                                strokeDasharray: "4,4",
+                            })
+                        );
+
+                        // Reference strike mark in Spot Price sweep
+                        if (xAxis === "S") {
+                            marks.push(
+                                Plot.ruleX([K_val.value], {
+                                    stroke: "#ff7b72",
+                                    strokeWidth: 1.2,
+                                    strokeDasharray: "2,2",
+                                    title: `Strike Price (K = €${K_val.value})`,
+                                })
+                            );
+                        }
+
+                        const p = Plot.plot({
+                            width: width,
+                            height: height,
+                            marginLeft: 75,
+                            marginRight: 40,
+                            marginTop: 40,
+                            marginBottom: 60,
+                            style: {
+                                background: "transparent",
+                                color: "#8b949e",
+                                fontFamily: "Inter, sans-serif",
+                                fontSize: "11px",
+                            },
+                            grid: true,
+                            x: {
+                                label: unicodeLabels[xAxis],
+                                labelAnchor: "center",
+                                line: true,
+                            },
+                            y: {
+                                label: unicodeLabels[zAxis],
+                                labelAnchor: "center",
+                                line: true,
+                            },
+                            marks: marks,
+                        });
+
+                        chart2dEl.value.appendChild(p);
+                    }
+
+                    // Draw plot handler based on mode selection
+                    function drawPlots() {
+                        if (graphType.value === "3D") {
+                            render3DPlot();
+                        } else {
+                            render2DPlot();
+                        }
+                    }
+
+                    // Trigger reactive redraws on any coordinate grid changes with logging for diagnostics
+                    watch(graphType, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] graphType changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(optionType, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] optionType changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(xAxisKey, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] xAxisKey changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(yAxisKey, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] yAxisKey changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(zAxisKey, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] zAxisKey changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(steps3D, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] steps3D changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(compareCallPut, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] compareCallPut changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(showIntrinsicPayoff, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] showIntrinsicPayoff changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+                    watch(compareD1D2, (newVal) => {
+                        console.log(
+                            "[BSM Terminal] compareD1D2 changed to:",
+                            newVal,
+                        );
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    });
+
+                    // Deep watch parameters values
+                    watch(parameters, () => {
+                        console.log("[BSM Terminal] parameter value changed.");
+                        nextTick(() => {
+                            drawPlots();
+                        });
+                    }, { deep: true });
+
+                    onMounted(() => {
+                        drawPlots();
+                        // Resize listener to reflow plots
+                        window.addEventListener("resize", () => {
+                            drawPlots();
+                        });
+                    });
+
+                    return {
+                        graphType,
+                        optionType,
+                        parameters,
+                        xAxisKey,
+                        yAxisKey,
+                        zAxisKey,
+                        steps3D,
+                        compareCallPut,
+                        showIntrinsicPayoff,
+                        compareD1D2,
+                        outputs,
+                        unicodeLabels,
+                        calculatedValues,
+                        isAxesValid,
+                        statusClass,
+                        statusText,
+                        chart3dEl,
+                        chart2dEl,
+                        formatParamValue,
+                        formatOutputValue,
+                    };
+                },
+            }).mount("#app");
+        </script>
+    </body>
+</html>
