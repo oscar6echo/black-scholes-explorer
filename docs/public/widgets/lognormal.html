@@ -1,491 +1,569 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lognormal Price Distribution Explorer</title>
-  <!-- Load Inter Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Load Vue 3, D3, and Observable Plot from CDN -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
-  <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --border-color: #334155;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #38bdf8;
-      --primary-hover: #7dd3fc;
-      --accent-mean: #ef4444;
-      --accent-median: #f59e0b;
-      --accent-mode: #10b981;
-    }
-
-    body {
-      margin: 0;
-      padding: 8px;
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      overflow: hidden;
-    }
-
-    #app {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .widget-container {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 12px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .header {
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 6px;
-    }
-
-    .title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-main);
-      margin: 0;
-    }
-
-    .subtitle {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin: 2px 0 0 0;
-    }
-
-    .layout {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    /* Stacked vertically by default (in maximized / large mode) */
-    .controls-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background-color: rgba(15, 23, 42, 0.2);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .control-label {
-      font-size: 0.72rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .control-value {
-      font-family: 'Fira Code', monospace;
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--border-color);
-      outline: none;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--primary);
-      cursor: pointer;
-      transition: background 0.15s ease-in-out;
-    }
-
-    input[type="range"]::-webkit-slider-thumb:hover {
-      background: var(--primary-hover);
-    }
-
-    .plot-panel {
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    #plot-container {
-      width: 100%;
-      background-color: rgba(15, 23, 42, 0.3);
-      border-radius: 8px;
-      border: 1px solid rgba(51, 65, 85, 0.5);
-      padding: 4px;
-      box-sizing: border-box;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .stat-card {
-      background-color: rgba(15, 23, 42, 0.4);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 6px;
-      text-align: center;
-    }
-
-    .stat-label {
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .stat-label-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-
-    .dot-mean { background-color: var(--accent-mean); }
-    .dot-median { background-color: var(--accent-median); }
-    .dot-mode { background-color: var(--accent-mode); }
-
-    .stat-value {
-      font-family: 'Fira Code', monospace;
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    /* Multi-column grid ONLY in regular / small height mode inside Vitepress */
-    @media (max-height: 500px) {
-      .controls-panel {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 6px;
-        padding: 6px 12px;
-      }
-      
-      .stats-grid {
-        display: none !important;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <div class="widget-container">
-      <div class="header">
-        <h3 class="title">Lognormal Probability Density</h3>
-        <p class="subtitle">Observe how drift, volatility, and maturity deform the distribution of <i>S<sub>T</sub></i>.</p>
-      </div>
-
-      <div class="layout">
-        <!-- Controls Top Panel -->
-        <div class="controls-panel">
-          <!-- Spot Price -->
-          <div class="control-group">
-            <div class="control-label">
-              <span>Spot Price (<i>S</i><sub>0</sub>)</span>
-              <span class="control-value">{{ s0.toFixed(1) }}</span>
-            </div>
-            <input type="range" min="0" max="150" step="1" v-model.number="s0">
-          </div>
-
-          <!-- Volatility -->
-          <div class="control-group">
-            <div class="control-label">
-              <span>Volatility (&sigma;)</span>
-              <span class="control-value">{{ (sigma * 100).toFixed(0) }}%</span>
-            </div>
-            <input type="range" min="0.05" max="0.80" step="0.01" v-model.number="sigma">
-          </div>
-
-          <!-- Maturity -->
-          <div class="control-group">
-            <div class="control-label">
-              <span>Maturity (<i>T</i>)</span>
-              <span class="control-value">{{ t.toFixed(2) }} yr</span>
-            </div>
-            <input type="range" min="0.1" max="3.0" step="0.05" v-model.number="t">
-          </div>
-
-          <!-- Drift -->
-          <div class="control-group">
-            <div class="control-label">
-              <span>Drift (&mu;)</span>
-              <span class="control-value">{{ (mu * 100).toFixed(0) }}%</span>
-            </div>
-            <input type="range" min="-0.05" max="0.20" step="0.01" v-model.number="mu">
-          </div>
-
-          <!-- Dividends -->
-          <div class="control-group">
-            <div class="control-label">
-              <span>Dividends (<i>q</i>)</span>
-              <span class="control-value">{{ (q * 100).toFixed(0) }}%</span>
-            </div>
-            <input type="range" min="0.0" max="0.15" step="0.01" v-model.number="q">
-          </div>
-        </div>
-
-        <!-- Chart Bottom -->
-        <div class="plot-panel">
-          <div id="plot-container"></div>
-          
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">
-                <span class="stat-label-dot dot-mean"></span>
-                <span>Mean E[S<sub>T</sub>]</span>
-              </div>
-              <div class="stat-value">€{{ mean.toFixed(2) }}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">
-                <span class="stat-label-dot dot-median"></span>
-                <span>Median Med[S<sub>T</sub>]</span>
-              </div>
-              <div class="stat-value">€{{ median.toFixed(2) }}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">
-                <span class="stat-label-dot dot-mode"></span>
-                <span>Mode Mode[S<sub>T</sub>]</span>
-              </div>
-              <div class="stat-value">€{{ mode.toFixed(2) }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /**
-     * ============================================================================
-     * Lognormal Distribution PDF Viewer Widget
-     * ============================================================================
-     * 
-     * ARCHITECTURE OVERVIEW:
-     * This widget provides an interactive visualization of the future stock price's
-     * probability density function (PDF) under Geometric Brownian Motion (GBM).
-     * 
-     * CORE MODULES:
-     * 1. Vue 3 Reactive State Manager:
-     *    - `s0`, `sigma`, `t`, `mu`, `q`: Input parameters sweeping stock drift-diffusion.
-     * 2. Lognormal Statistics (Computed):
-     *    - Analytical computations of Mean, Median, and Mode to showcase asymmetry.
-     * 3. Sweeping Loop (`generatePdfData`):
-     *    - Sweeps 300 points across stock price range to construct the PDF curve.
-     * 4. Observable Plot renderer (`renderPlot`):
-     *    - Draws the continuous PDF curve and highlights statistical indicators (Mode, Median, Mean).
-     * 
-     * DEVELOPER TIPS:
-     * - Swept range starts at 0.1 rather than 0.0 to prevent division by zero in log-normal log(x) computations.
-     * ============================================================================
-     */
-    const { createApp, ref, computed, watch, onMounted } = Vue;
-
-    createApp({
-      setup() {
-        // Reactive Parameters
-        const s0 = ref(100.0);
-        const sigma = ref(0.20);
-        const t = ref(1.0);
-        const mu = ref(0.08);
-        const q = ref(0.02);
-
-        // Analytical Lognormal Stats
-        const mean = computed(() => {
-          const S = Math.max(0.001, s0.value);
-          return S * Math.exp((mu.value - q.value) * t.value);
-        });
-
-        const median = computed(() => {
-          const S = Math.max(0.001, s0.value);
-          const mu_l = Math.log(S) + (mu.value - q.value - 0.5 * Math.pow(sigma.value, 2)) * t.value;
-          return Math.exp(mu_l);
-        });
-
-        const mode = computed(() => {
-          const S = Math.max(0.001, s0.value);
-          const mu_l = Math.log(S) + (mu.value - q.value - 0.5 * Math.pow(sigma.value, 2)) * t.value;
-          const sigma_l = sigma.value * Math.sqrt(t.value);
-          return Math.exp(mu_l - Math.pow(sigma_l, 2));
-        });
-
-        // Generate Plot Data
-        const generatePdfData = () => {
-          const S = Math.max(0.001, s0.value);
-          const mu_l = Math.log(S) + (mu.value - q.value - 0.5 * Math.pow(sigma.value, 2)) * t.value;
-          const sigma_l = sigma.value * Math.sqrt(t.value);
-          
-          const data = [];
-          const minX = 0.1; // always start close to zero to avoid curve hanging in mid-air!
-          const maxX = Math.max(50, S * 2.5);
-          const steps = 300;
-          const dx = (maxX - minX) / steps;
-
-          // If Spot is exactly 0, distribution is degenerate at 0.
-          if (s0.value <= 0) {
-            for (let i = 0; i <= steps; i++) {
-              data.push({ x: minX + i * dx, y: 0 });
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lognormal Price Distribution Explorer</title>
+        <!-- Load Inter Font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+            rel="stylesheet"
+        >
+        <!-- Load Vue 3, D3, and Observable Plot from CDN -->
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"
+        ></script>
+        <style>
+            :root {
+                --bg-color: #0f172a;
+                --card-bg: #1e293b;
+                --border-color: #334155;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+                --primary: #38bdf8;
+                --primary-hover: #7dd3fc;
+                --accent-mean: #ef4444;
+                --accent-median: #f59e0b;
+                --accent-mode: #10b981;
             }
-            return data;
-          }
 
-          for (let i = 0; i <= steps; i++) {
-            const x = minX + i * dx;
-            // Lognormal PDF formula
-            const exponent = -Math.pow(Math.log(x) - mu_l, 2) / (2 * Math.pow(sigma_l, 2));
-            const y = (1.0 / (x * sigma_l * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
-            data.push({ x, y });
-          }
-          return data;
-        };
+            body {
+                margin: 0;
+                padding: 8px;
+                font-family: "Inter", sans-serif;
+                background-color: var(--bg-color);
+                color: var(--text-main);
+                overflow: hidden;
+            }
 
-        // Redraw Plot
-        const renderPlot = () => {
-          const data = generatePdfData();
-          const container = document.getElementById('plot-container');
-          if (!container) return;
-          container.innerHTML = '';
+            #app {
+                max-width: 900px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+            }
 
-          const meanVal = mean.value;
-          const medianVal = median.value;
-          const modeVal = mode.value;
+            .widget-container {
+                background-color: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 12px;
+                box-shadow:
+                    0 4px 6px -1px rgb(0 0 0 / 0.1),
+                    0 2px 4px -2px rgb(0 0 0 / 0.1);
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
 
-          const rules = [];
-          if (s0.value > 0) {
-            rules.push(
-              Plot.ruleX([modeVal], {
-                stroke: "#10b981",
-                strokeWidth: 2,
-                strokeDasharray: "4,4",
-                title: `Mode: ${modeVal.toFixed(2)}`
-              }),
-              Plot.ruleX([medianVal], {
-                stroke: "#f59e0b",
-                strokeWidth: 2,
-                strokeDasharray: "4,4",
-                title: `Median: ${medianVal.toFixed(2)}`
-              }),
-              Plot.ruleX([meanVal], {
-                stroke: "#ef4444",
-                strokeWidth: 2,
-                strokeDasharray: "4,4",
-                title: `Mean: ${meanVal.toFixed(2)}`
-              })
-            );
-          }
+            .header {
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 6px;
+            }
 
-          const maxX = Math.max(50, Math.max(0.001, s0.value) * 2.5);
+            .title {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: var(--text-main);
+                margin: 0;
+            }
 
-          const plot = Plot.plot({
-            width: container.clientWidth || 550,
-            height: 210,
-            background: "transparent",
-            style: {
-              color: "#94a3b8",
-              fontFamily: "Inter, sans-serif",
-            },
-            x: {
-              label: "Terminal Stock Price (S_T) →",
-              grid: true,
-              ticks: 8,
-              line: true,
-              domain: [0, maxX]
-            },
-            y: {
-              label: "↑ Probability Density",
-              grid: true,
-              ticks: 5,
-              line: true,
-            },
-            marks: [
-              // Shaded area under PDF
-              Plot.areaY(data, {
-                x: "x",
-                y: "y",
-                fill: "#38bdf8",
-                fillOpacity: 0.15,
-              }),
-              // PDF Line
-              Plot.line(data, {
-                x: "x",
-                y: "y",
-                stroke: "#38bdf8",
-                strokeWidth: 2.5,
-              }),
-              ...rules
-            ]
-          });
+            .subtitle {
+                font-size: 0.78rem;
+                color: var(--text-muted);
+                margin: 2px 0 0 0;
+            }
 
-          container.appendChild(plot);
-        };
+            .layout {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
 
-        // Re-render plot when variables change
-        watch([s0, sigma, t, mu, q], () => {
-          renderPlot();
-        });
+            /* Stacked vertically by default (in maximized / large mode) */
+            .controls-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                background-color: rgba(15, 23, 42, 0.2);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 10px 12px;
+            }
 
-        // Resize handler
-        let resizeTimeout;
-        const handleResize = () => {
-          clearTimeout(resizeTimeout);
-          resizeTimeout = setTimeout(renderPlot, 100);
-        };
+            .control-group {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
 
-        onMounted(() => {
-          renderPlot();
-          window.addEventListener('resize', handleResize);
-        });
+            .control-label {
+                font-size: 0.72rem;
+                font-weight: 500;
+                color: var(--text-muted);
+                display: flex;
+                justify-content: space-between;
+            }
 
-        return {
-          s0,
-          sigma,
-          t,
-          mu,
-          q,
-          mean,
-          median,
-          mode
-        };
-      }
-    }).mount('#app');
-  </script>
-</body>
+            .control-value {
+                font-family: "Fira Code", monospace;
+                color: var(--primary);
+                font-weight: 600;
+            }
+
+            input[type="range"] {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 100%;
+                height: 4px;
+                border-radius: 2px;
+                background: var(--border-color);
+                outline: none;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: var(--primary);
+                cursor: pointer;
+                transition: background 0.15s ease-in-out;
+            }
+
+            input[type="range"]::-webkit-slider-thumb:hover {
+                background: var(--primary-hover);
+            }
+
+            .plot-panel {
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            #plot-container {
+                width: 100%;
+                background-color: rgba(15, 23, 42, 0.3);
+                border-radius: 8px;
+                border: 1px solid rgba(51, 65, 85, 0.5);
+                padding: 4px;
+                box-sizing: border-box;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+                margin-top: 4px;
+            }
+
+            .stat-card {
+                background-color: rgba(15, 23, 42, 0.4);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 6px;
+                text-align: center;
+            }
+
+            .stat-label {
+                font-size: 0.68rem;
+                color: var(--text-muted);
+                margin-bottom: 2px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+            }
+
+            .stat-label-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+            }
+
+            .dot-mean {
+                background-color: var(--accent-mean);
+            }
+            .dot-median {
+                background-color: var(--accent-median);
+            }
+            .dot-mode {
+                background-color: var(--accent-mode);
+            }
+
+            .stat-value {
+                font-family: "Fira Code", monospace;
+                font-size: 0.88rem;
+                font-weight: 700;
+                color: var(--text-main);
+            }
+
+            /* Multi-column grid ONLY in regular / small height mode inside Vitepress */
+            @media (max-height: 500px) {
+                .controls-panel {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                    gap: 6px;
+                    padding: 6px 12px;
+                }
+
+                .stats-grid {
+                    display: none !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <div class="widget-container">
+                <div class="header">
+                    <h3 class="title">Lognormal Probability Density</h3>
+                    <p class="subtitle">
+                        Observe how drift, volatility, and maturity deform the
+                        distribution of <i>S<sub>T</sub></i>.
+                    </p>
+                </div>
+
+                <div class="layout">
+                    <!-- Controls Top Panel -->
+                    <div class="controls-panel">
+                        <!-- Spot Price -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Spot Price (<i>S</i><sub>0</sub>)</span>
+                                <span class="control-value"
+                                >{{ s0.toFixed(1) }}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="150"
+                                step="1"
+                                v-model.number="s0"
+                            >
+                        </div>
+
+                        <!-- Volatility -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Volatility (&sigma;)</span>
+                                <span class="control-value"
+                                >{{ (sigma * 100).toFixed(0) }}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.05"
+                                max="0.80"
+                                step="0.01"
+                                v-model.number="sigma"
+                            >
+                        </div>
+
+                        <!-- Maturity -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Maturity (<i>T</i>)</span>
+                                <span class="control-value"
+                                >{{ t.toFixed(2) }} yr</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.1"
+                                max="3.0"
+                                step="0.05"
+                                v-model.number="t"
+                            >
+                        </div>
+
+                        <!-- Drift -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Drift (&mu;)</span>
+                                <span class="control-value"
+                                >{{ (mu * 100).toFixed(0) }}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="-0.05"
+                                max="0.20"
+                                step="0.01"
+                                v-model.number="mu"
+                            >
+                        </div>
+
+                        <!-- Dividends -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Dividends (<i>q</i>)</span>
+                                <span class="control-value"
+                                >{{ (q * 100).toFixed(0) }}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0.0"
+                                max="0.15"
+                                step="0.01"
+                                v-model.number="q"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Chart Bottom -->
+                    <div class="plot-panel">
+                        <div id="plot-container"></div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-label">
+                                    <span
+                                        class="stat-label-dot dot-mean"
+                                    ></span>
+                                    <span>Mean E[S<sub>T</sub>]</span>
+                                </div>
+                                <div class="stat-value">
+                                    €{{ mean.toFixed(2) }}
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">
+                                    <span
+                                        class="stat-label-dot dot-median"
+                                    ></span>
+                                    <span>Median Med[S<sub>T</sub>]</span>
+                                </div>
+                                <div class="stat-value">
+                                    €{{ median.toFixed(2) }}
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">
+                                    <span
+                                        class="stat-label-dot dot-mode"
+                                    ></span>
+                                    <span>Mode Mode[S<sub>T</sub>]</span>
+                                </div>
+                                <div class="stat-value">
+                                    €{{ mode.toFixed(2) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /**
+             * ============================================================================
+             * Lognormal Distribution PDF Viewer Widget
+             * ============================================================================
+             *
+             * ARCHITECTURE OVERVIEW:
+             * This widget provides an interactive visualization of the future stock price's
+             * probability density function (PDF) under Geometric Brownian Motion (GBM).
+             *
+             * CORE MODULES:
+             * 1. Vue 3 Reactive State Manager:
+             *    - `s0`, `sigma`, `t`, `mu`, `q`: Input parameters sweeping stock drift-diffusion.
+             * 2. Lognormal Statistics (Computed):
+             *    - Analytical computations of Mean, Median, and Mode to showcase asymmetry.
+             * 3. Sweeping Loop (`generatePdfData`):
+             *    - Sweeps 300 points across stock price range to construct the PDF curve.
+             * 4. Observable Plot renderer (`renderPlot`):
+             *    - Draws the continuous PDF curve and highlights statistical indicators (Mode, Median, Mean).
+             *
+             * DEVELOPER TIPS:
+             * - Swept range starts at 0.1 rather than 0.0 to prevent division by zero in log-normal log(x) computations.
+             * ============================================================================
+             */
+            const { createApp, ref, computed, watch, onMounted } = Vue;
+
+            createApp({
+                setup() {
+                    // Reactive Parameters
+                    const s0 = ref(100.0);
+                    const sigma = ref(0.20);
+                    const t = ref(1.0);
+                    const mu = ref(0.08);
+                    const q = ref(0.02);
+
+                    // Analytical Lognormal Stats
+                    const mean = computed(() => {
+                        const S = Math.max(0.001, s0.value);
+                        return S * Math.exp((mu.value - q.value) * t.value);
+                    });
+
+                    const median = computed(() => {
+                        const S = Math.max(0.001, s0.value);
+                        const mu_l = Math.log(S) +
+                            (mu.value - q.value -
+                                    0.5 * Math.pow(sigma.value, 2)) * t.value;
+                        return Math.exp(mu_l);
+                    });
+
+                    const mode = computed(() => {
+                        const S = Math.max(0.001, s0.value);
+                        const mu_l = Math.log(S) +
+                            (mu.value - q.value -
+                                    0.5 * Math.pow(sigma.value, 2)) * t.value;
+                        const sigma_l = sigma.value * Math.sqrt(t.value);
+                        return Math.exp(mu_l - Math.pow(sigma_l, 2));
+                    });
+
+                    // Generate Plot Data
+                    const generatePdfData = () => {
+                        const S = Math.max(0.001, s0.value);
+                        const mu_l = Math.log(S) +
+                            (mu.value - q.value -
+                                    0.5 * Math.pow(sigma.value, 2)) * t.value;
+                        const sigma_l = sigma.value * Math.sqrt(t.value);
+
+                        const data = [];
+                        const minX = 0.1; // always start close to zero to avoid curve hanging in mid-air!
+                        const maxX = Math.max(50, S * 2.5);
+                        const steps = 300;
+                        const dx = (maxX - minX) / steps;
+
+                        // If Spot is exactly 0, distribution is degenerate at 0.
+                        if (s0.value <= 0) {
+                            for (let i = 0; i <= steps; i++) {
+                                data.push({ x: minX + i * dx, y: 0 });
+                            }
+                            return data;
+                        }
+
+                        for (let i = 0; i <= steps; i++) {
+                            const x = minX + i * dx;
+                            // Lognormal PDF formula
+                            const exponent = -Math.pow(Math.log(x) - mu_l, 2) /
+                                (2 * Math.pow(sigma_l, 2));
+                            const y =
+                                (1.0 / (x * sigma_l * Math.sqrt(2 * Math.PI))) *
+                                Math.exp(exponent);
+                            data.push({ x, y });
+                        }
+                        return data;
+                    };
+
+                    // Redraw Plot
+                    const renderPlot = () => {
+                        const data = generatePdfData();
+                        const container = document.getElementById(
+                            "plot-container",
+                        );
+                        if (!container) return;
+                        container.innerHTML = "";
+
+                        const meanVal = mean.value;
+                        const medianVal = median.value;
+                        const modeVal = mode.value;
+
+                        const rules = [];
+                        if (s0.value > 0) {
+                            rules.push(
+                                Plot.ruleX([modeVal], {
+                                    stroke: "#10b981",
+                                    strokeWidth: 2,
+                                    strokeDasharray: "4,4",
+                                    title: `Mode: ${modeVal.toFixed(2)}`,
+                                }),
+                                Plot.ruleX([medianVal], {
+                                    stroke: "#f59e0b",
+                                    strokeWidth: 2,
+                                    strokeDasharray: "4,4",
+                                    title: `Median: ${medianVal.toFixed(2)}`,
+                                }),
+                                Plot.ruleX([meanVal], {
+                                    stroke: "#ef4444",
+                                    strokeWidth: 2,
+                                    strokeDasharray: "4,4",
+                                    title: `Mean: ${meanVal.toFixed(2)}`,
+                                }),
+                            );
+                        }
+
+                        const maxX = Math.max(
+                            50,
+                            Math.max(0.001, s0.value) * 2.5,
+                        );
+
+                        const plot = Plot.plot({
+                            width: container.clientWidth || 550,
+                            height: 210,
+                            background: "transparent",
+                            style: {
+                                color: "#94a3b8",
+                                fontFamily: "Inter, sans-serif",
+                            },
+                            x: {
+                                label: "Terminal Stock Price (S_T) →",
+                                grid: true,
+                                ticks: 8,
+                                line: true,
+                                domain: [0, maxX],
+                            },
+                            y: {
+                                label: "↑ Probability Density",
+                                grid: true,
+                                ticks: 5,
+                                line: true,
+                            },
+                            marks: [
+                                // Shaded area under PDF
+                                Plot.areaY(data, {
+                                    x: "x",
+                                    y: "y",
+                                    fill: "#38bdf8",
+                                    fillOpacity: 0.15,
+                                }),
+                                // PDF Line
+                                Plot.line(data, {
+                                    x: "x",
+                                    y: "y",
+                                    stroke: "#38bdf8",
+                                    strokeWidth: 2.5,
+                                }),
+                                ...rules,
+                            ],
+                        });
+
+                        container.appendChild(plot);
+                    };
+
+                    // Re-render plot when variables change
+                    watch([s0, sigma, t, mu, q], () => {
+                        renderPlot();
+                    });
+
+                    // Resize handler
+                    let resizeTimeout;
+                    const handleResize = () => {
+                        clearTimeout(resizeTimeout);
+                        resizeTimeout = setTimeout(renderPlot, 100);
+                    };
+
+                    onMounted(() => {
+                        renderPlot();
+                        window.addEventListener("resize", handleResize);
+                    });
+
+                    return {
+                        s0,
+                        sigma,
+                        t,
+                        mu,
+                        q,
+                        mean,
+                        median,
+                        mode,
+                    };
+                },
+            }).mount("#app");
+        </script>
+    </body>
 </html>
