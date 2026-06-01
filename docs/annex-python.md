@@ -111,17 +111,17 @@ To support different learning environments, we provide three quantitative Jupyte
 
 ### A. BSM Symbolic Verification
 Verify Call and Put analytical formulas, all first and second-order Greeks (Delta, Gamma, Vega, Voma, Theta, Rho), and Black-Scholes PDE residuals.
-* 🌐 **Static HTML Viewer**: <a href="/notebooks/1-sympy-verification.html" target="_blank" rel="noopener noreferrer">Pre-rendered SymPy Verification Page</a> — *View complete, pre-calculated algebraic equations and numerical outputs instantly online.*
+* 🌐 **Static HTML Viewer**: <a href="/black-scholes-explorer/notebooks/1-sympy-verification.html" target="_blank" rel="noopener noreferrer">Pre-rendered SymPy Verification Page</a> — *View complete, pre-calculated algebraic equations and numerical outputs instantly online.*
 * 🐍 **Raw Jupyter Notebook**: [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) — *Download and run locally to modify or execute cells.*
 
 ### B. Lognormal Path Simulation
 Simulate asset price paths under Geometric Brownian Motion (GBM), verify terminal price distribution lognormality, and visualize convergence dynamics.
-* 🌐 **Static HTML Viewer**: <a href="/notebooks/2-lognormal-simulation.html" target="_blank" rel="noopener noreferrer">Pre-rendered Lognormal Simulation Page</a> — *View complete, pre-calculated path simulations and charts instantly online.*
+* 🌐 **Static HTML Viewer**: <a href="/black-scholes-explorer/notebooks/2-lognormal-simulation.html" target="_blank" rel="noopener noreferrer">Pre-rendered Lognormal Simulation Page</a> — *View complete, pre-calculated path simulations and charts instantly online.*
 * 🐍 **Raw Jupyter Notebook**: [2-lognormal-simulation.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/2-lognormal-simulation.ipynb) — *Download and run locally to modify or execute cells.*
 
 ### C. Monte Carlo Option Pricing
 Implement pricing visualizers, evaluate convergence errors comparing Plain Monte Carlo and Antithetic Variates, and run parameter deformation analyses.
-* 🌐 **Static HTML Viewer**: <a href="/notebooks/3-monte-carlo-pricing.html" target="_blank" rel="noopener noreferrer">Pre-rendered Monte Carlo Pricing Page</a> — *View complete, pre-calculated convergence reports and charts instantly online.*
+* 🌐 **Static HTML Viewer**: <a href="/black-scholes-explorer/notebooks/3-monte-carlo-pricing.html" target="_blank" rel="noopener noreferrer">Pre-rendered Monte Carlo Pricing Page</a> — *View complete, pre-calculated convergence reports and charts instantly online.*
 * 🐍 **Raw Jupyter Notebook**: [3-monte-carlo-pricing.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/3-monte-carlo-pricing.ipynb) — *Download and run locally to modify or execute cells.*
 
 ::: info Jupyter Notebook Execution Details 📓
