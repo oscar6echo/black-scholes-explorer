@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - ".vitepress/**"
       - ".github/workflows/deploy-pages.yml"
       - "package.json"
       - "pnpm-lock.yaml"
