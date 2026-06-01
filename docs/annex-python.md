@@ -107,25 +107,24 @@ print(f"PDE Residual simplifies to: {pde_check}")  # Output: 0
 
 > Companion notebooks offer complete symbolic verification, lognormal path simulation, and Monte Carlo option pricing implementations.
 
-To support different learning environments, we provide three quantitative Jupyter notebooks. For each notebook, you can access both the pre-rendered online version and the raw repository file:
+To support different learning environments, we provide pre-rendered online versions of our three quantitative Jupyter notebooks. 
+
+You can access the pre-rendered interactive HTML pages instantly online. To modify, run, or extend the notebooks locally, clone the repository and open the raw `.ipynb` files from the `/python` folder.
 
 ### A. BSM Symbolic Verification
 Verify Call and Put analytical formulas, all first and second-order Greeks (Delta, Gamma, Vega, Voma, Theta, Rho), and Black-Scholes PDE residuals.
 * 🌐 **Static HTML Viewer**: <a href="/black-scholes-explorer/notebooks/1-sympy-verification.html" target="_blank" rel="noopener noreferrer">Pre-rendered SymPy Verification Page</a> — *View complete, pre-calculated algebraic equations and numerical outputs instantly online.*
-* 🐍 **Raw Jupyter Notebook**: [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) — *Download and run locally to modify or execute cells.*
 
 ### B. Lognormal Path Simulation
 Simulate asset price paths under Geometric Brownian Motion (GBM), verify terminal price distribution lognormality, and visualize convergence dynamics.
 * 🌐 **Static HTML Viewer**: <a href="/black-scholes-explorer/notebooks/2-lognormal-simulation.html" target="_blank" rel="noopener noreferrer">Pre-rendered Lognormal Simulation Page</a> — *View complete, pre-calculated path simulations and charts instantly online.*
-* 🐍 **Raw Jupyter Notebook**: [2-lognormal-simulation.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/2-lognormal-simulation.ipynb) — *Download and run locally to modify or execute cells.*
 
 ### C. Monte Carlo Option Pricing
 Implement pricing visualizers, evaluate convergence errors comparing Plain Monte Carlo and Antithetic Variates, and run parameter deformation analyses.
 * 🌐 **Static HTML Viewer**: <a href="/black-scholes-explorer/notebooks/3-monte-carlo-pricing.html" target="_blank" rel="noopener noreferrer">Pre-rendered Monte Carlo Pricing Page</a> — *View complete, pre-calculated convergence reports and charts instantly online.*
-* 🐍 **Raw Jupyter Notebook**: [3-monte-carlo-pricing.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/3-monte-carlo-pricing.ipynb) — *Download and run locally to modify or execute cells.*
 
-::: info Jupyter Notebook Execution Details 📓
-The raw Jupyter Notebook files (`.ipynb`) in our repository are saved **without cell outputs** to keep the codebase lightweight and avoid git tracking noise.
-* **Online viewing**: Use the **Static HTML Viewer** links above to view full, pre-calculated outputs (including symbols, tables, and graphs) directly in your browser.
-* **Local execution**: The raw notebooks must be run locally. Clone the repository, set up your Python environment, and run them interactively to explore or modify the simulation and verification steps.
+::: info Jupyter Notebook Local Execution 📓
+The raw Jupyter Notebook files (`.ipynb`) in our repository are saved **without cell outputs** to ensure a clean Git history and lightweight codebase.
+* **Online viewing**: Use the **Static HTML Viewer** links above to view full, pre-calculated equations, tables, and graphs directly in your browser.
+* **Local execution**: The raw notebooks must be run locally. Clone the repository, set up your Python environment (using the `/python` directory), and open the `.ipynb` files interactively in your local Jupyter environment.
 :::

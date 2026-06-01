@@ -105,7 +105,9 @@ As volatility ($\sigma$) or maturity ($T$) increases, the skewness of the distri
 :::
 
 ::: tip Companion Jupyter Notebook 📓
-For an interactive Python implementation of this SDE simulation (complete with path generators, terminal price histograms, and parameter sensitivity plots), you can view the <a href="/black-scholes-explorer/notebooks/2-lognormal-simulation.html" target="_blank" rel="noopener noreferrer">Pre-rendered Simulation Page</a> online, or download the raw [2-lognormal-simulation.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/2-lognormal-simulation.ipynb) notebook to run locally.
+For an interactive Python implementation of this SDE simulation (complete with path generators, terminal price histograms, and parameter sensitivity plots), you can view the <a href="/black-scholes-explorer/notebooks/2-lognormal-simulation.html" target="_blank" rel="noopener noreferrer">Pre-rendered Simulation Page</a> online.
+
+*(Note: You can clone the repository to access and run the raw `2-lognormal-simulation.ipynb` notebook locally from the `/python` folder.)*
 :::
 
 ## 3. Constructing the Delta-Hedged Portfolio
@@ -217,7 +219,9 @@ The BSM PDE can also be represented using standard option **Greeks**:
 $$\Theta + (r - q)S\Delta + \frac{1}{2}\sigma^2 S^2 \Gamma - rV = 0$$
 
 ::: tip Symbolic Verification
-You can formally verify that our option pricing models satisfy the Black-Scholes-Merton PDE symbolically using Python and SymPy. See [Annex B: Symbolic Verification via Python & SymPy](./annex-python.md), the <a href="/black-scholes-explorer/notebooks/1-sympy-verification.html" target="_blank" rel="noopener noreferrer">Pre-rendered SymPy Page</a> online, or download the raw [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) notebook to run locally.
+You can formally verify that our option pricing models satisfy the Black-Scholes-Merton PDE symbolically using Python and SymPy. See [Annex B: Symbolic Verification via Python & SymPy](./annex-python.md), or view the <a href="/black-scholes-explorer/notebooks/1-sympy-verification.html" target="_blank" rel="noopener noreferrer">Pre-rendered SymPy Page</a> online.
+
+*(Note: You can clone the repository to access and run the raw `1-sympy-verification.ipynb` notebook locally from the `/python` folder.)*
 :::
 
 ## 7. Takeaways & Limits
