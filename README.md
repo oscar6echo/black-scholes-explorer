@@ -89,3 +89,21 @@ pnpm run preview      # preview production build
 Pushes to `main` that touch `docs/**`, `package.json`, or `pnpm-lock.yaml` automatically redeploy to GitHub Pages via `.github/workflows/deploy-pages.yml`.
 
 **One-time setup:** in repo **Settings → Pages → Source**, select **GitHub Actions**.
+
+### Notebook Build Pipeline
+
+We compile quantitative Jupyter notebooks to static HTML files to serve them directly inside the VitePress documentation site. We also strip execution cell outputs from `.ipynb` files before committing to keep the repository lightweight and avoid git noise.
+
+A helper shell script `build-notebooks.sh` is provided to automate this pipeline.
+
+Before committing changes to any Jupyter notebooks or deploying the site, make sure you have `jupyter` and `nbconvert` installed in your Python environment and run the pipeline script from the root directory:
+
+```bash
+chmod +x build-notebooks.sh
+./build-notebooks.sh
+```
+
+This script will:
+
+1. Compile all notebooks under `python/` to self-contained HTML pages inside `docs/public/notebooks/`.
+2. Clear execution cell outputs from the original notebooks under `python/` inplace.

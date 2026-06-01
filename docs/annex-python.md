@@ -2,7 +2,7 @@
 
 > We leverage Python's SymPy library to programmatically verify BSM analytical pricing formulas, Greeks, and PDE residuals.
 
-This annex introduces the scope of symbolic verification in options pricing, outlines key code implementations, and provides a link to our pre-executed, highly visual verification notebook.
+This annex introduces the scope of symbolic verification in options pricing, outlines key code implementations, and provides direct access to our suite of quantitative Jupyter notebooks (available both as online static HTML pages and as clean repository source files for local execution).
 
 ## 1. Verification Scope
 
@@ -103,12 +103,29 @@ pde_check = sp.simplify(residual_c)
 print(f"PDE Residual simplifies to: {pde_check}")  # Output: 0
 ```
 
-## 4. SymPy Notebook
+## 4. Quantitative Notebooks
 
-> A companion Jupyter notebook offers complete pre-executed symbolic verification and high-precision numerical cross-checks.
+> Companion notebooks offer complete symbolic verification, lognormal path simulation, and Monte Carlo option pricing implementations.
 
-To view the complete verification process, including the derivation of **all Greeks** (Delta, Gamma, Vega, Voma, Theta, Rho) for both Calls and Puts, symbolic display of the intermediate math, and double-precision numerical cross-checks against SciPy, open the pre-executed notebook:
+To support different learning environments, we provide three quantitative Jupyter notebooks. For each notebook, you can access both the pre-rendered online version and the raw repository file:
 
-* **Jupyter Notebook**: [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb)
+### A. BSM Symbolic Verification
+Verify Call and Put analytical formulas, all first and second-order Greeks (Delta, Gamma, Vega, Voma, Theta, Rho), and Black-Scholes PDE residuals.
+* 🌐 **Static HTML Viewer**: [Pre-rendered SymPy Verification Page](/notebooks/1-sympy-verification.html) — *View complete, pre-calculated algebraic equations and numerical outputs instantly online.*
+* 🐍 **Raw Jupyter Notebook**: [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) — *Download and run locally to modify or execute cells.*
 
-This notebook contains enough step-by-step cells to make SymPy's LaTeX print outputs fully visible and easy to follow.
+### B. Lognormal Path Simulation
+Simulate asset price paths under Geometric Brownian Motion (GBM), verify terminal price distribution lognormality, and visualize convergence dynamics.
+* 🌐 **Static HTML Viewer**: [Pre-rendered Lognormal Simulation Page](/notebooks/2-lognormal-simulation.html) — *View complete, pre-calculated path simulations and charts instantly online.*
+* 🐍 **Raw Jupyter Notebook**: [2-lognormal-simulation.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/2-lognormal-simulation.ipynb) — *Download and run locally to modify or execute cells.*
+
+### C. Monte Carlo Option Pricing
+Implement pricing visualizers, evaluate convergence errors comparing Plain Monte Carlo and Antithetic Variates, and run parameter deformation analyses.
+* 🌐 **Static HTML Viewer**: [Pre-rendered Monte Carlo Pricing Page](/notebooks/3-monte-carlo-pricing.html) — *View complete, pre-calculated convergence reports and charts instantly online.*
+* 🐍 **Raw Jupyter Notebook**: [3-monte-carlo-pricing.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/3-monte-carlo-pricing.ipynb) — *Download and run locally to modify or execute cells.*
+
+::: info Jupyter Notebook Execution Details 📓
+The raw Jupyter Notebook files (`.ipynb`) in our repository are saved **without cell outputs** to keep the codebase lightweight and avoid git tracking noise.
+* **Online viewing**: Use the **Static HTML Viewer** links above to view full, pre-calculated outputs (including symbols, tables, and graphs) directly in your browser.
+* **Local execution**: The raw notebooks must be run locally. Clone the repository, set up your Python environment, and run them interactively to explore or modify the simulation and verification steps.
+:::

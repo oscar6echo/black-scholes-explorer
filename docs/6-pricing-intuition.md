@@ -63,7 +63,7 @@ The fair price of the call option is the **area under this contribution curve**.
 <IframeViewer src="/widgets/four-panel.html" height="720px" title="Option Pricing Geometry (Four-Panel)" />
 
 ::: tip Companion Jupyter Notebook 📓
-For a downloadable, pre-rendered Python implementation of this geometric pricing visualizer (complete with convergence error plots comparing Plain MC and Antithetic Variates, the Four-Panel subplots, and Greek deformation curves), see the companion [3-monte-carlo-pricing.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/3-monte-carlo-pricing.ipynb) notebook.
+For an interactive Python implementation of this geometric pricing visualizer (complete with convergence error plots comparing Plain MC and Antithetic Variates, the Four-Panel subplots, and Greek deformation curves), you can view the [Pre-rendered MC Pricing Page](/notebooks/3-monte-carlo-pricing.html) online, or download the raw [3-monte-carlo-pricing.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/3-monte-carlo-pricing.ipynb) notebook to run locally.
 :::
 
 ## 3. Monte Carlo Pricing

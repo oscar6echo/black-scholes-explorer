@@ -272,5 +272,5 @@ $$\boxed{\ \ \vphantom{\int} \text{Voma} = \frac{S_0 e^{-qT} \phi(d_1) \sqrt{T} 
   * When the stock price is close to the strike (at-the-money), $d_1 > 0$ and $d_2 < 0$, making $d_1 d_2 < 0$, so Voma is negative. At-the-money options have peak Vega, so their Vega decreases as volatility moves away from zero.
 
 ::: tip Symbolic Verification
-You can formally verify all Greek formulas derived in this document (Delta, Gamma, Vega, Voma, Theta, Rho) symbolically using Python and SymPy. See [Annex B: Symbolic Verification via Python & SymPy](./annex-python.md) and the companion [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) notebook.
+You can formally verify all Greek formulas derived in this document (Delta, Gamma, Vega, Voma, Theta, Rho) symbolically using Python and SymPy. See [Annex B: Symbolic Verification via Python & SymPy](./annex-python.md), the [Pre-rendered SymPy Page](/notebooks/1-sympy-verification.html) online, or download the raw [1-sympy-verification.ipynb](https://github.com/oscar6echo/black-scholes-explorer/blob/main/python/1-sympy-verification.ipynb) notebook to run locally.
 :::
