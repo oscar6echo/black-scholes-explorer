@@ -13,7 +13,7 @@
     <div class="iframe-viewport">
       <iframe 
         ref="iframeEl" 
-        :src="src" 
+        :src="withBase(src)" 
         class="iframe-element" 
         :style="{ height: isFullscreen ? '100%' : height }" 
         scrolling="no" 
@@ -25,6 +25,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { withBase } from 'vitepress'
 
 const props = defineProps({
   src: { type: String, required: true },
@@ -48,7 +49,7 @@ function toggleFullscreen() {
 
 function reloadIframe() {
   if (iframeEl.value) {
-    iframeEl.value.src = props.src
+    iframeEl.value.src = withBase(props.src)
   }
 }
 
