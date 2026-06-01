@@ -11,7 +11,7 @@ A VitePress documentation site covering option pricing from first principles —
 | Section | URL | Contents |
 | --- | --- | --- |
 | **Overview** | `/overview` | Introduction to options modeling, boundary limits, and course syllabus |
-| **Theory (Ch. 1–5)** | `/1-ito-lemma` to `/5-theory-reference` | Stochastic derivation of the BSM PDE, analytical pricing integrals, closed-form Greeks, and consolidated mathematical lookup tables |
+| **Theory (Ch. 1–5)** | `/1-ito-lemma` to `/5-theory-reference` | Stochastic derivation of the BSM PDE, analytical pricing integrals, closed-form Greeks, and consolidated mathematical formula sheets |
 | **Intuition & MC (Ch. 6–7)** | `/6-pricing-intuition` to `/7-bsm-viewer` | Geometric deconstruction of the option value contribution curve, Monte Carlo path simulations, and the interactive quantitative terminal |
 | **Extensions (Ch. 8)** | `/8-vol-surface` | Volatility surface modeling, implied volatility smile/skew, Newton-Raphson solver, and the Breeden-Litzenberger probability density extraction |
 | **Math Annex** | `/annex-math` | Mathematical reference of the standard normal distribution functions, integrals, and calculus properties |
